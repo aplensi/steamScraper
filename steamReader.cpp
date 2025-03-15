@@ -1,15 +1,8 @@
 #include "steamReader.h"
 
-steamReader::steamReader()
+steamReader::steamReader(int countOfPages) : m_countOfPages(countOfPages)
 {
-    startProxy();
-    openPage(QString::number(1));
-}
-
-steamReader::steamReader(int numberOfPage)
-{
-    startProxy();
-    openPage(QString::number(numberOfPage));
+    openPage(QString::number(m_curentPage));
 }
 
 steamReader::~steamReader()
@@ -19,18 +12,23 @@ steamReader::~steamReader()
 
 void steamReader::openPage(QString str)
 {
-    m_view = new QWebEngineView;
+    startProxy();
+    m_profile = new QWebEngineProfile;
+    m_view = new QWebEngineView(m_profile);
     m_view->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, false);
     m_view->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + str + "_name_asc"));
-    m_view->resize(100,300);
+    m_view->setGeometry(0, 0, 300, 600);
     m_view->show();
+
     connect(m_view, &QWebEngineView::loadFinished, this, [this, str](bool sucess){
         if (sucess) {
             getPage(str);
         } else{
-            qDebug() << "load failed!";
-            m_view->deleteLater();
+            qDebug() << "load failed! " << str;
             QTimer::singleShot(1000, this, [this, str]() {
+                m_view->close();
+                delete m_view;
+                delete m_profile;
                 openPage(str);
             });
         }
@@ -39,29 +37,58 @@ void steamReader::openPage(QString str)
 
 void steamReader::getPage(QString str)
 {
+    m_timer = new QTimer;
+    m_timer->setSingleShot(true);
+    
     m_view->page()->toHtml([this, str](const QString html){
         if(html.contains("market_listing_table_header"))
         {
             std::ofstream ofs("pages/page "+str.toStdString()+".html");
             ofs << html.toStdString();
-            m_view->hide();
-            m_view->deleteLater();
-            qDebug() << "+++++ | load filished! | +++++";
-            this->deleteLater();
+            qDebug() << "+++++ | load of page num " << str << " is finished | +++++";
+            m_view->close();
+            delete m_view;
+            delete m_profile;
+            m_curentPage++;
+            if(m_curentPage < m_countOfPages)
+            {
+                tryCount = 0;
+                openPage(QString::number(m_curentPage));
+            } else {
+                delete this;
+            }
         } else{
-            getPage(str);
+            QTimer::singleShot(250, this, [this, str]() {
+                if(tryCount < 3)
+                {
+                    qDebug() << "try: " << tryCount;
+                    tryCount += 0.25;
+                    getPage(str);
+                } else{
+                    tryCount = 0;
+                    m_view->close();
+                    delete m_view;
+                    delete m_profile;
+                    openPage(QString::number(m_curentPage));
+                }
+            });
         }
     });
 }
 
 void steamReader::startProxy()
 {
+    QString proxyHost = "127.0.0.1";
+    int proxyPort = 9050;
+
+    QNetworkProxy networkProxy(QNetworkProxy::Socks5Proxy, proxyHost, proxyPort);
+    QNetworkProxy::setApplicationProxy(networkProxy);
+}
+
+void steamReader::clearData()
+{
     m_profile = QWebEngineProfile::defaultProfile();
 
-    m_proxy = new QNetworkProxy;
-    m_proxy->setType(QNetworkProxy::Socks5Proxy);
-    m_proxy->setHostName("127.0.0.1");
-    m_proxy->setPort(9050);
-
-    QNetworkProxy::setApplicationProxy(*m_proxy);
+    m_cookies = m_profile->cookieStore();
+    m_cookies->deleteAllCookies();
 }

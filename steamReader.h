@@ -6,7 +6,10 @@
 #include <QTimer>
 #include <QWebEngineProfile>
 #include <QWebEngineSettings>
+#include <QWebEngineCookieStore>
 #include <QApplication>
+#include <cstdlib>
+#include <QHostInfo>
 #include <QWidget>
 #include <QUrl>
 #include <QObject>
@@ -17,16 +20,21 @@
 class steamReader : public QObject{
     Q_OBJECT
 public:
-    steamReader();
-    steamReader(int numberOfPage);
+    steamReader(int countOfPages);
     ~steamReader();
 private:
 QWebEngineProfile *m_profile;
+QWebEngineCookieStore *m_cookies;
 QWebEngineView* m_view;
 QNetworkProxy* m_proxy;
+QTimer* m_timer;
+int m_countOfPages;
+int m_curentPage = 1;
+double tryCount = 0;
 void openPage(QString str);
 void getPage(QString str);
 void startProxy();
+void clearData();
 };
 
 #endif
