@@ -52,20 +52,20 @@ void steamReader::getPage(QString str)
             m_curentPage++;
             if(m_curentPage < m_countOfPages)
             {
-                tryCount = 0;
+                m_tryCount = 0;
                 openPage(QString::number(m_curentPage));
             } else {
                 delete this;
             }
         } else{
             QTimer::singleShot(250, this, [this, str]() {
-                if(tryCount < 3)
+                if(m_tryCount < 3)
                 {
-                    qDebug() << "try: " << tryCount;
-                    tryCount += 0.25;
+                    qDebug() << "try: " << m_tryCount;
+                    m_tryCount += 0.25;
                     getPage(str);
                 } else{
-                    tryCount = 0;
+                    m_tryCount = 0;
                     m_view->close();
                     delete m_view;
                     delete m_profile;
@@ -83,12 +83,4 @@ void steamReader::startProxy()
 
     QNetworkProxy networkProxy(QNetworkProxy::Socks5Proxy, proxyHost, proxyPort);
     QNetworkProxy::setApplicationProxy(networkProxy);
-}
-
-void steamReader::clearData()
-{
-    m_profile = QWebEngineProfile::defaultProfile();
-
-    m_cookies = m_profile->cookieStore();
-    m_cookies->deleteAllCookies();
 }

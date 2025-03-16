@@ -6,10 +6,7 @@
 #include <QTimer>
 #include <QWebEngineProfile>
 #include <QWebEngineSettings>
-#include <QWebEngineCookieStore>
 #include <QApplication>
-#include <cstdlib>
-#include <QHostInfo>
 #include <QWidget>
 #include <QUrl>
 #include <QObject>
@@ -30,11 +27,11 @@ QNetworkProxy* m_proxy;
 QTimer* m_timer;
 int m_countOfPages;
 int m_curentPage = 1;
-double tryCount = 0;
+double m_tryCount = 0;
 void openPage(QString str);
+void openFewPages();
 void getPage(QString str);
 void startProxy();
-void clearData();
 };
 
 #endif
