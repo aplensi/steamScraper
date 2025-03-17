@@ -18,19 +18,22 @@ class steamReader : public QObject{
     Q_OBJECT
 public:
     steamReader(int countOfPages);
+    steamReader(int startPage, int countOfPages);
     ~steamReader();
+public slots:
+    void isLoaded(bool result);
 private:
 QWebEngineProfile *m_profile;
-QWebEngineCookieStore *m_cookies;
 QWebEngineView* m_view;
 QNetworkProxy* m_proxy;
 QTimer* m_timer;
 int m_countOfPages;
-int m_curentPage = 1;
-double m_tryCount = 0;
-void openPage(QString str);
-void openFewPages();
-void getPage(QString str);
+int m_currentPage = 1;
+int m_currentTry = 0;
+bool m_isLoaded = false;
+bool m_isStarted = false;
+void openPage();
+void writePage(std::string nPage, QString html);
 void startProxy();
 };
 
