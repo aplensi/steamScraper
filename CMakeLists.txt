@@ -8,8 +8,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core WebEngineWidgets Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core WebEngineWidgets Widgets Sql)
 
-add_executable(steamScrapers main.cpp steamReader.h steamReader.cpp)
+add_executable(steamScrapers 
+main.cpp 
+include/steamReader.h 
+src/steamReader.cpp 
+include/parser.h 
+src/parser.cpp)
 
-target_link_libraries(steamScrapers PRIVATE Qt6::Core Qt6::Widgets Qt6::WebEngineWidgets)
+target_link_libraries(steamScrapers PRIVATE Qt6::Core Qt6::Widgets Qt6::WebEngineWidgets Qt6::Sql)
