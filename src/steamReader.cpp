@@ -10,9 +10,14 @@ steamReader::steamReader(int startPage, int countOfPages) : m_countOfPages(count
     openPage();
 }
 
-steamReader::~steamReader()
+steamReader::steamReader(int countOfPages, int *counterOfExec) : m_countOfPages(countOfPages), m_counterOfExec(counterOfExec)
 {
-    qDebug() << "destructor";
+    openPage();
+}
+
+steamReader::steamReader(int startPage, int countOfPages, int* counterOfExec) : m_countOfPages(countOfPages), m_currentPage(startPage), m_counterOfExec(counterOfExec)
+{
+    openPage();
 }
 
 void steamReader::openPage()
@@ -42,7 +47,7 @@ void steamReader::isLoaded(bool result)
             htmlStatus(m_isStarted);
         }
     } else{
-        qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed after start";
+        //qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed after start";
         m_view->deleteLater();
         m_profile->deleteLater();
         openPage();
@@ -65,13 +70,15 @@ void steamReader::htmlStatus(bool isStarted)
     } else{
         checkLine = "\"market_paging_pagelink active\">" + QString().number(m_currentPage);
     }
+
     m_view->page()->toHtml([this, checkLine](QString html){
         if(html.contains(checkLine)){
             writePage(std::to_string(m_currentPage), html);
-            qDebug() << "+++++ | load of page num " << QString::number(m_currentPage) << " is finished | +++++";
+            //qDebug() << "+++++ | load of page num " << QString::number(m_currentPage) << " is finished | +++++";
             m_isStarted = true;
             m_currentTry = 0;
             m_currentPage++;
+            *m_counterOfExec += 1;
             openPage();
         } else{
             if(m_currentTry < 20){
@@ -80,7 +87,7 @@ void steamReader::htmlStatus(bool isStarted)
                     isLoaded(true);
                 });
             } else{
-                qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed";
+                //qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed";
                 m_currentTry = 0;
                 m_view->deleteLater();
                 m_profile->deleteLater();

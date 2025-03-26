@@ -1,14 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <QString>
-#include <QSqlDatabase>
-#include <QDateTime>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <vector>
-#include <QFile>
-#include <QTextStream>
+#include "includes.h"
 
 struct itemsOfPage{
     QString m_name;

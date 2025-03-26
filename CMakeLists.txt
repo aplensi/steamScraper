@@ -12,6 +12,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core WebEngineWidgets Widgets Sql)
 
 add_executable(steamScrapers 
 main.cpp 
+include/includes.h
 include/steamReader.h 
 src/steamReader.cpp 
 include/parser.h 

@@ -1,20 +1,7 @@
 #ifndef STEAMREADER_H
 #define STEAMREADER_H
 
-#include "parser.h"
-#include <QWebEngineView>
-#include <QNetworkProxy>
-#include <QDir>
-#include <QTimer>
-#include <QWebEngineProfile>
-#include <QWebEngineSettings>
-#include <QApplication>
-#include <QWidget>
-#include <QUrl>
-#include <QObject>
-#include <fstream>
-#include <QString>
-#include <iostream>
+#include "includes.h"
 
 class steamReader : public QObject{
     Q_OBJECT
@@ -23,7 +10,6 @@ public:
     steamReader(int startPage, int countOfPages); //    in range of pages
     steamReader(int countOfPages, int* counterOfExec); //   from the first page with a counter
     steamReader(int startPage, int countOfPages, int* counterOfExec); //    in range of pages with a counter
-    ~steamReader();
 private slots:
     void isLoaded(bool result);
 private:
