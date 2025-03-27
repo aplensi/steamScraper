@@ -16,6 +16,8 @@ include/includes.h
 include/steamReader.h 
 src/steamReader.cpp 
 include/parser.h 
-src/parser.cpp)
+src/parser.cpp
+include/controller.h
+src/controller.cpp)
 
 target_link_libraries(steamScrapers PRIVATE Qt6::Core Qt6::Widgets Qt6::WebEngineWidgets Qt6::Sql)

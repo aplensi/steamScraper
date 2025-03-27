@@ -3,7 +3,7 @@
 #include <QDateTime>
 #include <QSqlQuery>
 #include <QSqlError>
-#include <vector>
+#include <QVector>
 #include <QFile>
 #include <QTextStream>
 #include <QWebEngineView>

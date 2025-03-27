@@ -9,6 +9,13 @@ struct itemsOfPage{
     float m_NormalPrice;
     float m_SalePrice;
     QString m_lastCheck;
+
+    friend QDebug operator<<(QDebug debug, const itemsOfPage &items) {
+        debug.nospace() << "Item(Name: "<<items.m_name<<"; Count: "<<items.m_count<<"; NormalPrice: "<<items.m_SalePrice<<
+        "; SalePrice: "<<items.m_SalePrice<<"; lastCheck: "<<items.m_lastCheck<<")";
+        return debug;
+    }
+
 };
 
 class parser{
@@ -16,16 +23,14 @@ class parser{
 public:
     void readFile(QString fileName);
     void readBuffer(QString html);
-    void writeToSql(itemsOfPage Items);
-    void writeToSql(std::vector<itemsOfPage>* m_listOfItems);
-    void connectToPgSQL();
-
+    QVector<itemsOfPage> getListOfItems();
 private:
-    QString parsLine(QString line);
+    void parsLine(QString line);
     QString m_html;
     QFile m_file;
     QDateTime m_dateTime;
-    std::vector<itemsOfPage>* m_listOfItems;
+    itemsOfPage m_items;
+    QVector<itemsOfPage> m_listOfItems;
 };
 
 #endif
