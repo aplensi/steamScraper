@@ -18,9 +18,9 @@ struct itemsOfPage{
 
 };
 
-class parser{
-
-public:
+class parser: public QObject{
+    Q_OBJECT
+public slots:
     void readFile(QString fileName);
     void readBuffer(QString html);
     QVector<itemsOfPage> getListOfItems();

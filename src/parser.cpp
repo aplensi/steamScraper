@@ -29,6 +29,9 @@ void parser::readBuffer(QString html)
         parsLine(sLine);
         html = html.mid(html.indexOf('\n') + 1);
     }
+    for(auto i : m_listOfItems){
+        qDebug() << i;
+    }
 }
 
 QVector<itemsOfPage> parser::getListOfItems()

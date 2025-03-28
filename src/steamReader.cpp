@@ -2,11 +2,13 @@
 
 steamReader::steamReader(int countOfPages) : m_countOfPages(countOfPages)
 {
+    m_counterOfExec = new int(-1);
     openPage();
 }
 
 steamReader::steamReader(int startPage, int countOfPages) : m_countOfPages(countOfPages), m_currentPage(startPage)
 {
+    m_counterOfExec = new int(-1);
     openPage();
 }
 
@@ -74,11 +76,13 @@ void steamReader::htmlStatus(bool isStarted)
     m_view->page()->toHtml([this, checkLine](QString html){
         if(html.contains(checkLine)){
             writePage(std::to_string(m_currentPage), html);
-            //qDebug() << "+++++ | load of page num " << QString::number(m_currentPage) << " is finished | +++++";
             m_isStarted = true;
             m_currentTry = 0;
             m_currentPage++;
-            *m_counterOfExec += 1;
+            if(*m_counterOfExec != -1){
+                *m_counterOfExec += 1;
+            }
+            emit pushToParse(html);
             openPage();
         } else{
             if(m_currentTry < 20){
@@ -87,7 +91,6 @@ void steamReader::htmlStatus(bool isStarted)
                     isLoaded(true);
                 });
             } else{
-                //qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed";
                 m_currentTry = 0;
                 m_view->deleteLater();
                 m_profile->deleteLater();

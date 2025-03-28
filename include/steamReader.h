@@ -12,6 +12,8 @@ public:
     steamReader(int startPage, int countOfPages, int* counterOfExec); //    in range of pages with a counter
 private slots:
     void isLoaded(bool result);
+signals:
+    void pushToParse(QString html);
 private:
     QWebEngineProfile *m_profile;
     QWebEngineView* m_view;
