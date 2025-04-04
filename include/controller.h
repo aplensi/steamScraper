@@ -5,16 +5,20 @@
 #include "parser.h"
 #include "steamReader.h"
 
-class controller{
+class controller : public QObject{
+    Q_OBJECT
 public:
-    void connectToPgSQL(/* need put parametrs */);
+    void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
+    void createTable();
+
     void loadPages(int countOfWidgets, int countOfPages);
     void loadPages(int countOfWidgets);
     void readParsWrite();
+public slots:
+    void pushToPgSQL(QVector<itemsOfPage> listOfItems);
 private:
     bool pgConnected = false;
-    void writeToSql(itemsOfPage items);
-    void writeToSql(std::vector<itemsOfPage>* listOfItems);
+    QSqlDatabase db;
 };
 
 #endif

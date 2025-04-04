@@ -32,6 +32,7 @@ void parser::readBuffer(QString html)
     for(auto i : m_listOfItems){
         qDebug() << i;
     }
+    emit sendListOfItems(m_listOfItems);
 }
 
 QVector<itemsOfPage> parser::getListOfItems()
@@ -40,7 +41,6 @@ QVector<itemsOfPage> parser::getListOfItems()
 }
 void parser::parsLine(QString line)
 {
-
     if(line.indexOf("result_") != -1 && line.indexOf("_name") != -1){
         line = line.mid(line.indexOf(">") + 1);
         line = line.left(line.indexOf("<"));

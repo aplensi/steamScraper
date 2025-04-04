@@ -24,6 +24,8 @@ public slots:
     void readFile(QString fileName);
     void readBuffer(QString html);
     QVector<itemsOfPage> getListOfItems();
+signals:
+    void sendListOfItems(QVector<itemsOfPage> listOfItems);
 private:
     void parsLine(QString line);
     QString m_html;
