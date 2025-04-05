@@ -14,6 +14,7 @@ private slots:
     void isLoaded(bool result);
 signals:
     void pushToParse(QString html);
+    void readerFinished();
 private:
     QWebEngineProfile *m_profile;
     QWebEngineView* m_view;

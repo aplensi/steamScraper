@@ -25,6 +25,11 @@ steamReader::steamReader(int startPage, int countOfPages, int* counterOfExec) : 
 void steamReader::openPage()
 {
     if(m_currentPage > m_countOfPages){
+        delete m_view;
+        delete m_profile;
+        m_view = nullptr;
+        m_profile = nullptr;
+        emit readerFinished();
         return;
     }
     if(!m_isStarted){

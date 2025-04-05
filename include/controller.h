@@ -11,6 +11,7 @@ public:
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
 
+    int getCountOfPages();
     void loadPages(int countOfWidgets, int countOfPages);
     void loadPages(int countOfWidgets);
     void readParsWrite();

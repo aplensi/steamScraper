@@ -23,9 +23,11 @@ class parser: public QObject{
 public slots:
     void readFile(QString fileName);
     void readBuffer(QString html);
+    void getCountOfPagesFromBuffer(QString html);
     QVector<itemsOfPage> getListOfItems();
 signals:
     void sendListOfItems(QVector<itemsOfPage> listOfItems);
+    void sendCountOfPages(int count);
 private:
     void parsLine(QString line);
     QString m_html;

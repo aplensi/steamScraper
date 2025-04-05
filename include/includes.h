@@ -1,5 +1,6 @@
 #include <QString>
 #include <QSqlDatabase>
+#include <QRegularExpression>
 #include <QDateTime>
 #include <QSqlQuery>
 #include <QSqlError>

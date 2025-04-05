@@ -20,12 +20,11 @@ void parser::readBuffer(QString html)
 {
     m_listOfItems.clear();
     QString sLine;
-    QString res;
     while(true){
         sLine = html.left(html.indexOf('\n') + 1);
         if(sLine.indexOf('\n') == -1){
             break;
-        }
+        } 
         parsLine(sLine);
         html = html.mid(html.indexOf('\n') + 1);
     }
@@ -35,11 +34,26 @@ void parser::readBuffer(QString html)
     emit sendListOfItems(m_listOfItems);
 }
 
+void parser::getCountOfPagesFromBuffer(QString html)
+{
+    int count = 0;
+    QString sLine;
+    QRegularExpression regex(R"(<span class="market_paging_pagelink">\s*(\d+)\s*</span>)");
+    QRegularExpressionMatchIterator it = regex.globalMatch(html);
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        count = match.captured(1).toInt();
+    }
+    qDebug() << "Count of pages: " << count;
+    emit sendCountOfPages(count);
+}
+
 QVector<itemsOfPage> parser::getListOfItems()
 {
     return m_listOfItems;
 }
-void parser::parsLine(QString line)
+
+void parser::parsLine(QString line)  // Need refactoring!!!
 {
     if(line.indexOf("result_") != -1 && line.indexOf("_name") != -1){
         line = line.mid(line.indexOf(">") + 1);

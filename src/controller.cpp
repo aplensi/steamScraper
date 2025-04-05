@@ -58,3 +58,11 @@ void controller::createTable()
         qDebug() << "Database is not connected.";
     }
 }
+
+int controller::getCountOfPages()
+{
+    steamReader* reader = new steamReader(1,1);
+    parser* pars = new parser();
+    QObject::connect(reader, &steamReader::pushToParse, pars, &parser::getCountOfPagesFromBuffer);
+    return 0;
+}
