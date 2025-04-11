@@ -29,7 +29,7 @@ void parser::readBuffer(QString html)
         html = html.mid(html.indexOf('\n') + 1);
     }
     for(auto i : m_listOfItems){
-        qDebug() << i;
+        //qDebug() << i;
     }
     emit sendListOfItems(m_listOfItems);
 }
@@ -44,7 +44,6 @@ void parser::getCountOfPagesFromBuffer(QString html)
         QRegularExpressionMatch match = it.next();
         count = match.captured(1).toInt();
     }
-    qDebug() << "Count of pages: " << count;
     emit sendCountOfPages(count);
 }
 

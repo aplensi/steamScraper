@@ -8,8 +8,8 @@ void controller::connectToPgSQL(QString userName, QString passWord, QString addr
     db.setPassword(passWord);
     db.setHostName(address);
     db.setPort(port);
-    pgConnected = db.open();
-    if(pgConnected){
+    m_pgConnected = db.open();
+    if(m_pgConnected){
         qDebug() << "db is connected.";
     }else{
         qDebug() << "db isn't connected. " << db.lastError();
@@ -19,7 +19,7 @@ void controller::connectToPgSQL(QString userName, QString passWord, QString addr
 }
 void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
 {
-    if(pgConnected){
+    if(m_pgConnected){
         QSqlQuery query(db);
         for(const auto& item : listOfItems){
             query.prepare("INSERT INTO items (name, count, normal_price, sale_price, last_check) "
@@ -40,7 +40,7 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
 
 void controller::createTable()
 {
-    if(pgConnected){
+    if(m_pgConnected){
         QSqlQuery query(db);
         query.exec("CREATE TABLE IF NOT EXISTS items ("
                    "name VARCHAR(255), "
@@ -59,10 +59,49 @@ void controller::createTable()
     }
 }
 
-int controller::getCountOfPages()
+void controller::getCountOfPages()
 {
-    steamReader* reader = new steamReader(1,1);
+    steamReader* reader = new steamReader(1);
     parser* pars = new parser();
+
     QObject::connect(reader, &steamReader::pushToParse, pars, &parser::getCountOfPagesFromBuffer);
-    return 0;
+    QObject::connect(pars, &parser::sendCountOfPages, [this, reader, pars](int count){
+        m_countOfPages = count;
+        reader->deleteLater();
+        pars->deleteLater();
+        emit pagesAreObtained();
+    });
+}
+
+void controller::cycleOfPages(int countOfWidgets)
+{
+    int currentPage = 1;
+    int div = m_countOfPages / countOfWidgets;
+    qDebug() << "Count of widgets: " << countOfWidgets;
+    for(int i = 0; i < countOfWidgets; i++){
+        m_parser = new parser();
+        if(i + 1 >= countOfWidgets){
+            m_reader = new steamReader(currentPage,  m_countOfPages);
+            qDebug() << "widget: " << i + 1 << " from: " << currentPage << " to: " << m_countOfPages;
+        } else{
+            m_reader = new steamReader(currentPage, currentPage + div);
+            qDebug() << "widget: " << i + 1 << " from: " << currentPage << " to: " << currentPage + div;
+            currentPage += div;
+        }
+        connect(m_reader, &steamReader::pushToParse, m_parser, &parser::readBuffer);
+        connect(m_parser, &parser::sendListOfItems, this, &controller::pushToPgSQL);
+    }
+}
+
+void controller::loadPages(int countOfWidgets)
+{
+    if(m_countOfPages == 0){
+        getCountOfPages();
+        connect(this, &controller::pagesAreObtained, [this, countOfWidgets](){
+            qDebug() << "Count of pages: " << m_countOfPages;
+            cycleOfPages(countOfWidgets);
+        });
+    }else{
+        cycleOfPages(countOfWidgets);
+    }
 }

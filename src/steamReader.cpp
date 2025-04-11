@@ -1,37 +1,17 @@
 #include "../include/steamReader.h"
 
-steamReader::steamReader(int countOfPages) : m_countOfPages(countOfPages)
-{
-    m_counterOfExec = new int(-1);
-    openPage();
-}
-
-steamReader::steamReader(int startPage, int countOfPages) : m_countOfPages(countOfPages), m_currentPage(startPage)
-{
-    m_counterOfExec = new int(-1);
-    openPage();
-}
-
-steamReader::steamReader(int countOfPages, int *counterOfExec) : m_countOfPages(countOfPages), m_counterOfExec(counterOfExec)
+steamReader::steamReader(int endPage) : m_endPage(endPage)
 {
     openPage();
 }
 
-steamReader::steamReader(int startPage, int countOfPages, int* counterOfExec) : m_countOfPages(countOfPages), m_currentPage(startPage), m_counterOfExec(counterOfExec)
+steamReader::steamReader(int startPage, int endPage) : m_endPage(endPage), m_currentPage(startPage)
 {
     openPage();
 }
 
 void steamReader::openPage()
 {
-    if(m_currentPage > m_countOfPages){
-        delete m_view;
-        delete m_profile;
-        m_view = nullptr;
-        m_profile = nullptr;
-        emit readerFinished();
-        return;
-    }
     if(!m_isStarted){
         m_profile = new QWebEngineProfile;
         m_view = new QWebEngineView(m_profile);
@@ -54,7 +34,6 @@ void steamReader::isLoaded(bool result)
             htmlStatus(m_isStarted);
         }
     } else{
-        //qDebug() << "load of page: " << QString::number(m_currentPage) << " is failed after start";
         m_view->deleteLater();
         m_profile->deleteLater();
         openPage();
@@ -83,12 +62,19 @@ void steamReader::htmlStatus(bool isStarted)
             writePage(std::to_string(m_currentPage), html);
             m_isStarted = true;
             m_currentTry = 0;
+            qDebug() << "Page: " << QString::number(m_currentPage) << " is loaded";
             m_currentPage++;
-            if(*m_counterOfExec != -1){
-                *m_counterOfExec += 1;
+            if(m_currentPage > m_endPage){
+                delete m_view;
+                delete m_profile;
+                m_view = nullptr;
+                m_profile = nullptr;
+                emit readerFinished();
+                emit pushToParse(html);
+            }else{
+                emit pushToParse(html);
+                openPage();
             }
-            emit pushToParse(html);
-            openPage();
         } else{
             if(m_currentTry < 20){
                 QTimer::singleShot(250, [this](){

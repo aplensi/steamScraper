@@ -11,15 +11,21 @@ public:
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
 
-    int getCountOfPages();
     void loadPages(int countOfWidgets, int countOfPages);
     void loadPages(int countOfWidgets);
     void readParsWrite();
+    void getCountOfPages();
+signals:
+    void pagesAreObtained();
 public slots:
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
 private:
-    bool pgConnected = false;
+    steamReader* m_reader;
+    parser* m_parser;
+    int m_countOfPages = 0;
+    bool m_pgConnected = false;
     QSqlDatabase db;
+    void cycleOfPages(int countOfWidgets);
 };
 
 #endif

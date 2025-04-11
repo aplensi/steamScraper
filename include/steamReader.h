@@ -6,10 +6,8 @@
 class steamReader : public QObject{
     Q_OBJECT
 public:
-    steamReader(int countOfPages); //   from the first page
-    steamReader(int startPage, int countOfPages); //    in range of pages
-    steamReader(int countOfPages, int* counterOfExec); //   from the first page with a counter
-    steamReader(int startPage, int countOfPages, int* counterOfExec); //    in range of pages with a counter
+    steamReader(int m_endPage); //   from the first page
+    steamReader(int startPage, int m_endPage); //    in range of pages
 private slots:
     void isLoaded(bool result);
 signals:
@@ -21,10 +19,9 @@ private:
     QNetworkProxy* m_proxy;
     QTimer* m_timer;
     QDir dir;
-    int m_countOfPages;
+    int m_endPage;
     int m_currentPage = 1;
-    int m_currentTry = 0;
-    int* m_counterOfExec;   
+    int m_currentTry = 0;  
     bool m_isLoaded = false;
     bool m_isStarted = false;
     void openPage();
