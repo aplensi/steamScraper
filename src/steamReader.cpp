@@ -14,13 +14,15 @@ void steamReader::openPage()
 {
     if(!m_isStarted){
         m_profile = new QWebEngineProfile;
-        m_view = new QWebEngineView(m_profile);
+        m_page = new QWebEnginePage(m_profile);
         startProxy();
-        connect(m_view, &QWebEngineView::loadFinished, this, &steamReader::isLoaded);
-        m_view->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, false);
-        m_view->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
+        connect(m_page, &QWebEnginePage::loadFinished, this, &steamReader::isLoaded);
+        m_page->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, false);
+        m_page->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
+        //m_page->show();
     } else{
-        m_view->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
+        m_page->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
+        //m_page->show();
         isLoaded(true);
     }
 }
@@ -34,7 +36,7 @@ void steamReader::isLoaded(bool result)
             htmlStatus(m_isStarted);
         }
     } else{
-        m_view->deleteLater();
+        m_page->deleteLater();
         m_profile->deleteLater();
         openPage();
     }
@@ -57,7 +59,7 @@ void steamReader::htmlStatus(bool isStarted)
         checkLine = "\"market_paging_pagelink active\">" + QString().number(m_currentPage);
     }
 
-    m_view->page()->toHtml([this, checkLine](QString html){
+    m_page->toHtml([this, checkLine](QString html){
         if(html.contains(checkLine)){
             writePage(std::to_string(m_currentPage), html);
             m_isStarted = true;
@@ -65,9 +67,9 @@ void steamReader::htmlStatus(bool isStarted)
             qDebug() << "Page: " << QString::number(m_currentPage) << " is loaded";
             m_currentPage++;
             if(m_currentPage > m_endPage){
-                delete m_view;
+                delete m_page;
                 delete m_profile;
-                m_view = nullptr;
+                m_page = nullptr;
                 m_profile = nullptr;
                 emit readerFinished();
                 emit pushToParse(html);
@@ -83,7 +85,7 @@ void steamReader::htmlStatus(bool isStarted)
                 });
             } else{
                 m_currentTry = 0;
-                m_view->deleteLater();
+                m_page->deleteLater();
                 m_profile->deleteLater();
                 m_isStarted = false;
                 openPage();

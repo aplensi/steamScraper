@@ -15,7 +15,7 @@ signals:
     void readerFinished();
 private:
     QWebEngineProfile *m_profile;
-    QWebEngineView* m_view;
+    QWebEnginePage* m_page;
     QNetworkProxy* m_proxy;
     QTimer* m_timer;
     QDir dir;

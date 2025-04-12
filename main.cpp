@@ -4,10 +4,10 @@ int main(int argc, char** argv){
 
     QApplication a(argc, argv);
 
-    controller controll;
-    controll.connectToPgSQL("postgres", "123", "0.0.0.0", 5432, "rustskins");
-    controll.createTable();
-    controll.loadPages(8);
+    controller* controll = new controller();
+    controll->connectToPgSQL("postgres", "19458798", "193.29.224.114", 5432, "rustskins");
+    controll->createTable();
+    controll->loadPages(10);
 
     return a.exec();
 }

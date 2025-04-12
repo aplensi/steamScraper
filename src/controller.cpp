@@ -47,7 +47,7 @@ void controller::createTable()
                    "count INTEGER, "
                    "normal_price REAL, "
                    "sale_price REAL, "
-                   "last_check TEXT);");
+                   "last_check TIMESTAMP);");
         if(query.lastError().isValid()){
             qDebug() << "Error creating table:" << query.lastError();
         }else{
@@ -67,8 +67,8 @@ void controller::getCountOfPages()
     QObject::connect(reader, &steamReader::pushToParse, pars, &parser::getCountOfPagesFromBuffer);
     QObject::connect(pars, &parser::sendCountOfPages, [this, reader, pars](int count){
         m_countOfPages = count;
-        reader->deleteLater();
-        pars->deleteLater();
+        delete reader;
+        delete pars;
         emit pagesAreObtained();
     });
 }
@@ -85,15 +85,21 @@ void controller::cycleOfPages(int countOfWidgets)
             qDebug() << "widget: " << i + 1 << " from: " << currentPage << " to: " << m_countOfPages;
         } else{
             m_reader = new steamReader(currentPage, currentPage + div);
-            qDebug() << "widget: " << i + 1 << " from: " << currentPage << " to: " << currentPage + div;
+            qDebug() << "widget: " << i + 1 << " from: " << currentPage << " to: " << currentPage + div - 1;
             currentPage += div;
         }
-        connect(m_reader, &steamReader::pushToParse, m_parser, &parser::readBuffer);
-        connect(m_parser, &parser::sendListOfItems, this, &controller::pushToPgSQL);
     }
+    connect(m_reader, &steamReader::pushToParse, m_parser, &parser::readBuffer);
+    connect(m_parser, &parser::sendListOfItems, this, &controller::pushToPgSQL);
 }
 
-void controller::loadPages(int countOfWidgets)
+void controller::loadPages(int countOfWidgets, int countOfPages)
+{
+    m_countOfPages = countOfPages;
+    cycleOfPages(countOfWidgets);
+}
+
+void controller::loadPages(int countOfWidgets) 
 {
     if(m_countOfPages == 0){
         getCountOfPages();

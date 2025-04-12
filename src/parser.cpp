@@ -58,7 +58,7 @@ void parser::parsLine(QString line)  // Need refactoring!!!
         line = line.mid(line.indexOf(">") + 1);
         line = line.left(line.indexOf("<"));
         m_items.m_name = line;
-        m_items.m_lastCheck = m_dateTime.currentDateTime().toString();
+        m_items.m_lastCheck = m_dateTime.currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
         m_listOfItems.append(m_items);
     } else if(line.indexOf("market_listing_num_listings_qty") != -1){
         line = line.mid(line.indexOf(">") + 1);
