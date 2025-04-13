@@ -11,6 +11,7 @@
 #include <QNetworkProxy>
 #include <QDir>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QWebEngineProfile>
 #include <QWebEngineSettings>
 #include <QApplication>
