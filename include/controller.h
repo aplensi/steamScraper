@@ -28,7 +28,7 @@ private:
     int m_countOfFinished = 0;
     bool m_pgConnected = false;
     QVector<itemsOfPage> m_listOfItems;
-    QSqlDatabase db;
+    PGconn* conn = nullptr;
     void cycleOfPages(int countOfWidgets);
 };
 

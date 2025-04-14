@@ -1,9 +1,7 @@
 #include <QString>
-#include <QSqlDatabase>
 #include <QRegularExpression>
 #include <QDateTime>
-#include <QSqlQuery>
-#include <QSqlError>
+#include <libpq-fe.h>
 #include <QVector>
 #include <QFile>
 #include <QTextStream>

@@ -2,54 +2,74 @@
 
 void controller::connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase)
 {
-    db = QSqlDatabase::addDatabase("QPSQL");
-    db.setDatabaseName(nameDatabase);
-    db.setUserName(userName);
-    db.setPassword(passWord);
-    db.setHostName(address);
-    db.setPort(port);
-    m_pgConnected = db.open();
-    if(m_pgConnected){
+    QString connInfo = QString("host=%1 port=%2 dbname=%3 user=%4 password=%5")
+                           .arg(address)
+                           .arg(port)
+                           .arg(nameDatabase)
+                           .arg(userName)
+                           .arg(passWord);
+
+    conn = PQconnectdb(connInfo.toUtf8().constData());
+
+    if (PQstatus(conn) == CONNECTION_OK) {
+        m_pgConnected = true;
         qDebug() << "db is connected.";
-    }else{
-        qDebug() << "db isn't connected. " << db.lastError();
-        QStringList drivers = QSqlDatabase::drivers();
-        qDebug() << "Available drivers:" << drivers;
+    } else {
+        m_pgConnected = false;
+        qDebug() << "db isn't connected:" << PQerrorMessage(conn);
+        PQfinish(conn);
+        conn = nullptr;
     }
 }
+
 void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
 {
     QElapsedTimer timerPush;
     timerPush.start();
 
-    if(m_pgConnected){
-        QSqlQuery query(db);
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
 
-        if (!db.transaction()) {
-            qDebug() << "Failed to start transaction:" << db.lastError();
+    PGresult* res = PQexec(conn, "COPY items (name, count, normal_price, sale_price, last_check) FROM STDIN");
+    if (PQresultStatus(res) != PGRES_COPY_IN) {
+        qDebug() << "COPY command failed:" << PQerrorMessage(conn);
+        PQclear(res);
+        return;
+    }
+    PQclear(res);
+
+    for (const auto& item : listOfItems) {
+        QString line = QString("%1\t%2\t%3\t%4\t%5\n")
+                           .arg(item.m_name)
+                           .arg(item.m_count)
+                           .arg(item.m_NormalPrice)
+                           .arg(item.m_SalePrice)
+                           .arg(item.m_lastCheck);
+        QByteArray utf8Line = line.toUtf8();
+        if (PQputCopyData(conn, utf8Line.constData(), utf8Line.size()) != 1) {
+            qDebug() << "Error sending data:" << PQerrorMessage(conn);
+            PQputCopyEnd(conn, "Error during COPY");
             return;
         }
-
-        for(const auto& item : listOfItems){
-            query.prepare("INSERT INTO items (name, count, normal_price, sale_price, last_check) "
-                          "VALUES (:name, :count, :normal_price, :sale_price, :last_check);");
-            query.bindValue(":name", item.m_name);
-            query.bindValue(":count", item.m_count);
-            query.bindValue(":normal_price", item.m_NormalPrice);
-            query.bindValue(":sale_price", item.m_SalePrice);
-            query.bindValue(":last_check", item.m_lastCheck);
-            if(!query.exec()){
-                qDebug() << "Error inserting data:" << query.lastError();
-            }
-        }
-
-        if (!db.commit()) {
-            qDebug() << "Failed to commit transaction:" << db.lastError();
-        }
-
-    }else{
-        qDebug() << "Database is not connected.";
     }
+
+    if (PQputCopyEnd(conn, nullptr) != 1) {
+        qDebug() << "Error ending COPY:" << PQerrorMessage(conn);
+        return;
+    }
+
+    PGresult* copyRes;
+    while ((copyRes = PQgetResult(conn)) != nullptr) {
+        if (PQresultStatus(copyRes) != PGRES_COMMAND_OK) {
+            qDebug() << "COPY failed:" << PQerrorMessage(conn);
+            PQclear(copyRes);
+            return;
+        }
+        PQclear(copyRes);
+    }
+
     qDebug() << "Time push to sql elapsed:" << timerPush.elapsed() / 1000.0 << "seconds";
     qDebug() << "Timer of program elapsed:" << m_timer.elapsed() / 1000.0 << "seconds";
     qDebug() << "Data pushed to PostgreSQL.";
@@ -57,23 +77,28 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
 
 void controller::createTable()
 {
-    if(m_pgConnected){
-        QSqlQuery query(db);
-        query.exec("CREATE TABLE IF NOT EXISTS items ("
-                   "name VARCHAR(255), "
-                   "count INTEGER, "
-                   "normal_price REAL, "
-                   "sale_price REAL, "
-                   "last_check TIMESTAMP);");
-        if(query.lastError().isValid()){
-            qDebug() << "Error creating table:" << query.lastError();
-        }else{
-            qDebug() << "Table created successfully.";
-
-        }
-    }else{
+    if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
+        return;
     }
+
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS items ("
+        "name VARCHAR(255), "
+        "count INTEGER, "
+        "normal_price REAL, "
+        "sale_price REAL, "
+        "last_check TIMESTAMP);";
+
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Table created successfully.";
+    }
+
+    PQclear(res);
 }
 
 void controller::getCountOfPages()
