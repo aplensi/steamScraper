@@ -11,11 +11,14 @@ public:
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
 
+    void loadPages(int countOfWidgets, int countOfPages, bool cycle);
+    void loadPages(int countOfWidgets, bool cycle);
     void loadPages(int countOfWidgets, int countOfPages);
     void loadPages(int countOfWidgets);
     void getCountOfPages();
 signals:
     void pagesAreObtained();
+    void dataIsPushedToPgSQL();
 public slots:
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
     void collectDataFromPages(QVector<itemsOfPage> listOfItems);
@@ -27,9 +30,12 @@ private:
     int m_countOfPages = 0;
     int m_countOfFinished = 0;
     bool m_pgConnected = false;
+    bool m_cycle = false;
+    bool m_inCycle = false;
     QVector<itemsOfPage> m_listOfItems;
     PGconn* conn = nullptr;
     void cycleOfPages(int countOfWidgets);
+    void loadPages();
 };
 
 #endif

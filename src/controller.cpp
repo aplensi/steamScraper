@@ -73,6 +73,7 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     qDebug() << "Time push to sql elapsed:" << timerPush.elapsed() / 1000.0 << "seconds";
     qDebug() << "Timer of program elapsed:" << m_timer.elapsed() / 1000.0 << "seconds";
     qDebug() << "Data pushed to PostgreSQL.";
+    emit dataIsPushedToPgSQL();
 }
 
 void controller::createTable()
@@ -141,7 +142,7 @@ void controller::cycleOfPages(int countOfWidgets)
     }
 }
 
-void controller::collectDataFromPages(QVector<itemsOfPage> listOfItems)
+void controller::collectDataFromPages(QVector<itemsOfPage> listOfItems) 
 {
     m_listOfItems.append(listOfItems);
     qDebug() << "List of items size: " << m_listOfItems.size();
@@ -166,17 +167,54 @@ void controller::loadPages(int countOfWidgets, int countOfPages)
     cycleOfPages(countOfWidgets);
 }
 
+void controller::loadPages(int countOfWidgets, int countOfPages, bool cycle)
+{
+    m_timer.start();
+    m_countOfWidgets = countOfWidgets;
+    m_countOfPages = countOfPages;
+    m_cycle = cycle;
+    loadPages();
+}
+
 void controller::loadPages(int countOfWidgets) 
 {
+    m_timer.start();
     m_countOfWidgets = countOfWidgets;
+    loadPages();
+}
+
+void controller::loadPages(int countOfWidgets, bool cycle)
+{
+    m_timer.start();
+    m_countOfWidgets = countOfWidgets;
+    m_cycle = cycle;
+    loadPages();
+}
+
+void controller::loadPages()
+{
     m_timer.start();
     if(m_countOfPages == 0){
         getCountOfPages();
-        connect(this, &controller::pagesAreObtained, [this, countOfWidgets](){
+        connect(this, &controller::pagesAreObtained, [this](){
             qDebug() << "Count of pages: " << m_countOfPages;
-            cycleOfPages(countOfWidgets);
+            cycleOfPages(m_countOfWidgets);
         });
     }else{
-        cycleOfPages(countOfWidgets);
+        cycleOfPages(m_countOfWidgets);
+    }
+
+    if(!m_inCycle){
+        m_inCycle = true;
+        connect(this, &controller::dataIsPushedToPgSQL, [this](){
+            delete m_reader;
+            delete m_parser;
+            if(m_cycle){
+                loadPages();
+            } else{
+                qDebug() << "Program finished.";
+                exit(0);
+            }
+        });
     }
 }

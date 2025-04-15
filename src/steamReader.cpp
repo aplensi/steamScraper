@@ -19,10 +19,8 @@ void steamReader::openPage()
         connect(m_page, &QWebEnginePage::loadFinished, this, &steamReader::isLoaded);
         m_page->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, false);
         m_page->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
-        //m_page->show();
     } else{
         m_page->load(QUrl("https://steamcommunity.com/market/search?appid=252490#p" + QString::number(m_currentPage) + "_name_asc"));
-        //m_page->show();
         isLoaded(true);
     }
 }
@@ -61,7 +59,7 @@ void steamReader::htmlStatus(bool isStarted)
 
     m_page->toHtml([this, checkLine](QString html){
         if(html.contains(checkLine)){
-            writePage(std::to_string(m_currentPage), html);
+            //writePage(std::to_string(m_currentPage), html);
             m_isStarted = true;
             m_currentTry = 0;
             qDebug() << "Page: " << QString::number(m_currentPage) << " is loaded";
