@@ -29,6 +29,7 @@ public slots:
 signals:
     void sendListOfItems(QVector<itemsOfPage> listOfItems);
     void sendCountOfPages(int count);
+    void brockenRequest(int start);
 private:
     void parsPageOfMarketPlace(QString line);
     QString m_html;

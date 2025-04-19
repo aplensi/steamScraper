@@ -9,13 +9,13 @@ class itemReader : public QObject{
 public:
     void getCountOfItemsJson();
     void cycleOfReadItems(int countOfItems);
-    void readItem();
 signals:
     void getCountOfItemsIsFinished(QJsonDocument jsonDoc);
     void readCatalogIsFinished(QJsonDocument jsonDoc);
     void readItemIsFinished();
+public slots:
+    void readItems(int start);
 private:
-void readItems(int start, int countOfItems);
 void startProxy();
 parser* m_parser;
 QNetworkAccessManager* m_networkManager;

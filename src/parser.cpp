@@ -56,16 +56,23 @@ void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
 
 void parser::readItemsFromJson(QJsonDocument jsonDoc)
 {
+    int countofitems = m_listOfItems.length();
     QJsonObject jsonObj = jsonDoc.object();
     QJsonArray itemsArray = jsonObj.value("results").toArray();
+    int start = jsonObj.value("start").toInt();
+    int totalCount = jsonObj.value("total_count").toInt();
     for (const QJsonValue& value : itemsArray) {
         QJsonObject itemObj = value.toObject();
         m_items.m_name = itemObj.value("name").toString();
-        //qDebug() << "Item name:" << m_items.m_name;
         m_listOfItems.append(m_items);
     }
-    qDebug() << m_listOfItems.length();
-    emit sendListOfItems(m_listOfItems);
+    if(totalCount == 0){
+        qDebug() << "Error: total_count is 0.";
+        emit brockenRequest(start);
+    }else{
+        qDebug() << m_listOfItems.length();
+        emit sendListOfItems(m_listOfItems);
+    }
 }
 
 QVector<itemsOfPage> parser::getListOfItems()
@@ -73,7 +80,7 @@ QVector<itemsOfPage> parser::getListOfItems()
     return m_listOfItems;
 }
 
-void parser::parsPageOfMarketPlace(QString line)  // Need refactoring!!!
+void parser::parsPageOfMarketPlace(QString line)
 {
     QRegularExpression regex(R"(<span[^>]*class="market_listing_item_name"[^>]*>([^<]*)</span>)");
     QRegularExpressionMatch match = regex.match(line);

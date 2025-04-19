@@ -20,28 +20,26 @@ void itemReader::getCountOfItemsJson()
 }
 void itemReader::cycleOfReadItems(int countOfItems)
 {
-    int i = -100;
-    while(i < countOfItems + 100){
+    int i = 0;
+    while(i < countOfItems){
+        readItems(i);
         i += 100;
-        readItems(i, 100);
     }
 }
 
-void itemReader::readItems(int start, int count)
+void itemReader::readItems(int start)
 {
-    QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=" + QString::number(count) + "&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
+    QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=100&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
     m_request = new QNetworkRequest(url);
     m_networkManager = new QNetworkAccessManager();
     m_networkManager->get(*m_request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, [this, start, count](QNetworkReply* reply) {
+    connect(m_networkManager, &QNetworkAccessManager::finished, [this, start](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
-            //qDebug() << "Error: Failed to parse JSON. From: " << start;
             startProxy();
-            readItems(start, count);
+            readItems(start);
         }else{
-            //qDebug() << "Data: " << responseData;
             emit readCatalogIsFinished(jsonDoc);
         }
     });
