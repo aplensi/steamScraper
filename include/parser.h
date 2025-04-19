@@ -5,17 +5,16 @@
 
 struct itemsOfPage{
     QString m_name;
-    int m_count;
-    float m_NormalPrice;
-    float m_SalePrice;
-    QString m_lastCheck;
+    int m_id;
+};
 
-    friend QDebug operator<<(QDebug debug, const itemsOfPage &items) {
-        debug.nospace() << "Item(Name: "<<items.m_name<<"; Count: "<<items.m_count<<"; NormalPrice: "<<items.m_SalePrice<<
-        "; SalePrice: "<<items.m_SalePrice<<"; lastCheck: "<<items.m_lastCheck<<")";
-        return debug;
-    }
-
+struct item{
+    QString m_name;
+    int m_id;
+    float m_purchasePrice;
+    float m_countOfPurchase;
+    float m_salePrice;
+    float m_countOfSale;
 };
 
 class parser: public QObject{
@@ -24,12 +23,14 @@ public slots:
     void readFile(QString fileName);
     void readBuffer(QString html);
     void getCountOfPagesFromBuffer(QString html);
+    void getCountOfItemsFromJson(QJsonDocument jsonDoc);
+    void readItemsFromJson(QJsonDocument jsonDoc);
     QVector<itemsOfPage> getListOfItems();
 signals:
     void sendListOfItems(QVector<itemsOfPage> listOfItems);
     void sendCountOfPages(int count);
 private:
-    void parsLine(QString line);
+    void parsPageOfMarketPlace(QString line);
     QString m_html;
     QFile m_file;
     QDateTime m_dateTime;

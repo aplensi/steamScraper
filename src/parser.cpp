@@ -8,12 +8,9 @@ void parser::readFile(QString fileName)
     QString line;
     while(!m_file.atEnd()){
         line = m_file.readLine();
-        parsLine(line);
+        parsPageOfMarketPlace(line);
     }
     m_file.close();
-    for(auto i : m_listOfItems){
-        qDebug() << i;
-    }
 }
 
 void parser::readBuffer(QString html)
@@ -25,11 +22,8 @@ void parser::readBuffer(QString html)
         if(sLine.indexOf('\n') == -1){
             break;
         } 
-        parsLine(sLine);
+        parsPageOfMarketPlace(sLine);
         html = html.mid(html.indexOf('\n') + 1);
-    }
-    for(auto i : m_listOfItems){
-        //qDebug() << i;
     }
     emit sendListOfItems(m_listOfItems);
 }
@@ -47,35 +41,43 @@ void parser::getCountOfPagesFromBuffer(QString html)
     emit sendCountOfPages(count);
 }
 
+void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
+{
+    QJsonObject jsonObj = jsonDocl.object();
+    QJsonValue value = jsonObj.value("total_count");
+    if (value.isDouble()) {
+        int count = value.toInt();
+        qDebug() << "Count of items:" << count;
+        emit sendCountOfPages(count);
+    } else {
+        qDebug() << "Error: total_count is not a number.";
+    }
+}
+
+void parser::readItemsFromJson(QJsonDocument jsonDoc)
+{
+    QJsonObject jsonObj = jsonDoc.object();
+    QJsonArray itemsArray = jsonObj.value("results").toArray();
+    for (const QJsonValue& value : itemsArray) {
+        QJsonObject itemObj = value.toObject();
+        m_items.m_name = itemObj.value("name").toString();
+        //qDebug() << "Item name:" << m_items.m_name;
+        m_listOfItems.append(m_items);
+    }
+    qDebug() << m_listOfItems.length();
+    emit sendListOfItems(m_listOfItems);
+}
+
 QVector<itemsOfPage> parser::getListOfItems()
 {
     return m_listOfItems;
 }
 
-void parser::parsLine(QString line)  // Need refactoring!!!
+void parser::parsPageOfMarketPlace(QString line)  // Need refactoring!!!
 {
-    if(line.indexOf("result_") != -1 && line.indexOf("_name") != -1){
-        line = line.mid(line.indexOf(">") + 1);
-        line = line.left(line.indexOf("<"));
-        m_items.m_name = line;
-        m_items.m_lastCheck = m_dateTime.currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-        m_listOfItems.append(m_items);
-    } else if(line.indexOf("market_listing_num_listings_qty") != -1){
-        line = line.mid(line.indexOf(">") + 1);
-        line = line.left(line.indexOf("<"));
-        m_items.m_count = line.toInt();
-    } else if(line.indexOf("\"normal_price") != -1 || line.indexOf("sale_price") != -1){
-        bool normal = false;
-        if(line.indexOf("\"normal_price") != -1){
-            normal = true;
-        }
-        line = line.mid(line.indexOf(">") + 2);
-        line = line.left(line.indexOf("<"));
-        line = line.left(line.indexOf(" "));
-        if(normal == true){
-            m_items.m_NormalPrice = line.toFloat();
-        } else{
-            m_items.m_SalePrice = line.toFloat();
-        }
+    QRegularExpression regex(R"(<span[^>]*class="market_listing_item_name"[^>]*>([^<]*)</span>)");
+    QRegularExpressionMatch match = regex.match(line);
+    if (match.hasMatch()) {
+        qDebug() << "Item name:" << match.captured(1);
     }
 }

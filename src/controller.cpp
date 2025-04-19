@@ -43,10 +43,7 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     for (const auto& item : listOfItems) {
         QString line = QString("%1\t%2\t%3\t%4\t%5\n")
                            .arg(item.m_name)
-                           .arg(item.m_count)
-                           .arg(item.m_NormalPrice)
-                           .arg(item.m_SalePrice)
-                           .arg(item.m_lastCheck);
+                           .arg(item.m_id);
         QByteArray utf8Line = line.toUtf8();
         if (PQputCopyData(conn, utf8Line.constData(), utf8Line.size()) != 1) {
             qDebug() << "Error sending data:" << PQerrorMessage(conn);
@@ -86,10 +83,7 @@ void controller::createTable()
     const char* createTableSQL =
         "CREATE TABLE IF NOT EXISTS items ("
         "name VARCHAR(255), "
-        "count INTEGER, "
-        "normal_price REAL, "
-        "sale_price REAL, "
-        "last_check TIMESTAMP);";
+        "id INTEGER);";
 
     PGresult* res = PQexec(conn, createTableSQL);
 
@@ -213,7 +207,7 @@ void controller::loadPages()
                 loadPages();
             } else{
                 qDebug() << "Program finished.";
-                exit(0);
+                //exit(0);
             }
         });
     }

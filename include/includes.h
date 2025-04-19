@@ -18,4 +18,11 @@
 #include <QObject>
 #include <fstream>
 #include <QThread>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
 #include <iostream>
