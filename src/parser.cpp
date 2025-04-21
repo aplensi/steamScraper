@@ -48,6 +48,7 @@ void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
     if (value.isDouble()) {
         int count = value.toInt();
         qDebug() << "Count of items:" << count;
+        m_countOfItems = count;
         emit sendCountOfPages(count);
     } else {
         qDebug() << "Error: total_count is not a number.";
@@ -64,6 +65,7 @@ void parser::readItemsFromJson(QJsonDocument jsonDoc)
     for (const QJsonValue& value : itemsArray) {
         QJsonObject itemObj = value.toObject();
         m_items.m_name = itemObj.value("name").toString();
+        m_items.m_id = 0;
         m_listOfItems.append(m_items);
     }
     if(totalCount == 0){
@@ -71,7 +73,52 @@ void parser::readItemsFromJson(QJsonDocument jsonDoc)
         emit brockenRequest(start);
     }else{
         qDebug() << m_listOfItems.length();
-        emit sendListOfItems(m_listOfItems);
+        if(m_countOfItems == m_listOfItems.length()){
+            qDebug() << "All items are parsed.";
+            emit namesIsFilled(m_listOfItems);   
+        }
+    }
+}
+
+void parser::parsPageOfItem(QString html, QString nameOfItem)
+{
+    QRegularExpression regex(R"(.*Market_LoadOrderSpread\(\s*(\d+)\s*\).*;)");
+    QRegularExpression error(R"(.*You've made too many requests recently\. Please wait and try your request again later\..*)");
+    QRegularExpression error1(R"(.*You don't have permission to access.*)");
+    QRegularExpressionMatch match = regex.match(html);
+    QRegularExpressionMatch matchEr = error.match(html);
+    QRegularExpressionMatch matchEr1 = error1.match(html);
+
+    if(matchEr.hasMatch() || matchEr1.hasMatch()){
+        emit brockenPageOfItem(nameOfItem);
+    }else{
+        if (match.hasMatch()) {
+            int capturedNumber = match.captured(1).toInt();
+            for(auto& i : m_listOfItems){
+                if(i.m_name == nameOfItem){
+                    i.m_id = capturedNumber;
+                    m_countOfReadedItems++;
+                    m_finishedThreads++;
+                    qDebug() << "Count of readed items: " << m_countOfReadedItems;
+                    qDebug() << "Item name:" << i.m_name << " || ID of item:" << i.m_id;
+                }
+            }
+            if(m_finishedThreads == 100){
+                QVector<itemsOfPage> newList;
+                for(auto& i : m_listOfItems){
+                    if(i.m_id == 0){
+                        newList.append(i);
+                    }
+                }
+                m_finishedThreads = 0;
+                qDebug() << "count of items in heap:" << newList.length();
+                emit heapIsFinished(newList);
+            }
+        } else {
+            qDebug() << html;
+            qDebug() << "No match found.";
+            QCoreApplication::exit(0);
+        }
     }
 }
 

@@ -45,7 +45,42 @@ void itemReader::readItems(int start)
     });
 }
 
-void itemReader::startProxy()
+void itemReader::cycleOfReadPages(QVector<itemsOfPage> listOfItems)
+{
+    m_networkManager->deleteLater();
+    delete m_request;
+    for(int i = 0; i < 100 && i < listOfItems.length(); i++){
+        readPageOfItem(listOfItems[i].m_name);
+    }
+}
+
+void itemReader::readPageOfItem(QString nameOfItem)
+{
+    QString encodedName = QUrl::toPercentEncoding(nameOfItem);
+    QUrl url("https://steamcommunity.com/market/listings/252490/" + encodedName);
+    m_request = new QNetworkRequest(url);
+    m_networkManager = new QNetworkAccessManager(this);
+    m_networkManager->get(*m_request);
+    connect(m_networkManager, &QNetworkAccessManager::finished, [this, nameOfItem](QNetworkReply* reply) {
+        QByteArray responseData = reply->readAll();
+        QString responseString = QString::fromUtf8(responseData);
+        reply->deleteLater();
+        if(responseString.isEmpty()) {
+            startProxy();
+            readPageOfItem(nameOfItem);
+        }else{
+            emit readPageOfItemIsFinished(responseString, nameOfItem);
+        }
+    });
+}
+
+void itemReader::pageWithTooManyRequests(QString name)
+{
+    startProxy();
+    readPageOfItem(name);
+}
+
+void itemReader::startProxy() 
 {
     QString proxyHost = "127.0.0.1";
     int proxyPort = 9050;

@@ -9,15 +9,18 @@ class itemReader : public QObject{
 public:
     void getCountOfItemsJson();
     void cycleOfReadItems(int countOfItems);
+    void cycleOfReadPages(QVector<itemsOfPage> listOfItems);
 signals:
     void getCountOfItemsIsFinished(QJsonDocument jsonDoc);
     void readCatalogIsFinished(QJsonDocument jsonDoc);
     void readItemIsFinished();
+    void readPageOfItemIsFinished(QString html, QString nameOfItem);
 public slots:
     void readItems(int start);
+    void readPageOfItem(QString nameOfItem);
+    void pageWithTooManyRequests(QString name);
 private:
 void startProxy();
-parser* m_parser;
 QNetworkAccessManager* m_networkManager;
 QNetworkRequest* m_request;
 QNetworkReply* m_reply;
