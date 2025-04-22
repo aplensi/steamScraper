@@ -114,6 +114,10 @@ void parser::parsPageOfItem(QString html, QString nameOfItem)
                 qDebug() << "count of items in heap:" << newList.length();
                 emit heapIsFinished(newList);
             }
+            if(m_countOfReadedItems == m_countOfItems){
+                qDebug() << "All items are parsed.";
+                emit namesAndIdsIsReceived(m_listOfItems);
+            }
         } else {
             qDebug() << html;
             qDebug() << "No match found.";

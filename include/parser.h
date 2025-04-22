@@ -34,6 +34,7 @@ signals:
     void brockenPageOfItem(QString name);
     void namesIsFilled(QVector<itemsOfPage> listOfItems);
     void heapIsFinished(QVector<itemsOfPage> listOfItems);
+    void namesAndIdsIsReceived(QVector<itemsOfPage> listOfItems);
 private:
     void parsPageOfMarketPlace(QString line);
     QString m_html;

@@ -32,7 +32,7 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
         return;
     }
 
-    PGresult* res = PQexec(conn, "COPY items (name, count, normal_price, sale_price, last_check) FROM STDIN");
+    PGresult* res = PQexec(conn, "COPY items (name, id) FROM STDIN");
     if (PQresultStatus(res) != PGRES_COPY_IN) {
         qDebug() << "COPY command failed:" << PQerrorMessage(conn);
         PQclear(res);
@@ -41,7 +41,7 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     PQclear(res);
 
     for (const auto& item : listOfItems) {
-        QString line = QString("%1\t%2\t%3\t%4\t%5\n")
+        QString line = QString("%1\t%2\n")
                            .arg(item.m_name)
                            .arg(item.m_id);
         QByteArray utf8Line = line.toUtf8();
@@ -67,8 +67,8 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
         PQclear(copyRes);
     }
 
-    qDebug() << "Time push to sql elapsed:" << timerPush.elapsed() / 1000.0 << "seconds";
-    qDebug() << "Timer of program elapsed:" << m_timer.elapsed() / 1000.0 << "seconds";
+    // qDebug() << "Time push to sql elapsed:" << timerPush.elapsed() / 1000.0 << "seconds";
+    // qDebug() << "Timer of program elapsed:" << m_timer.elapsed() / 1000.0 << "seconds";
     qDebug() << "Data pushed to PostgreSQL.";
     emit dataIsPushedToPgSQL();
 }
