@@ -11,6 +11,8 @@ class controller : public QObject{
 public:
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
+    void getCountOfItemsInDB();
+    void getListOfItemsFromDB();
 
     void loadPages(int countOfWidgets, int countOfPages, bool cycle);
     void loadPages(int countOfWidgets, bool cycle);
@@ -20,9 +22,15 @@ public:
 signals:
     void pagesAreObtained();
     void dataIsPushedToPgSQL();
+    void countOfItemsIsObtained();
+    void countOfItemsFromDB(int count);
+    void listOfItemsFromDB(QVector<itemsOfPage> listOfItems);
 public slots:
+    void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
     void collectDataFromPages(QVector<itemsOfPage> listOfItems);
+    void compareCountOfItems();
+    void compareData(QVector<itemsOfPage> listOfItems);
 private:
     steamReader* m_reader;
     parser* m_parser;
@@ -30,10 +38,14 @@ private:
     int m_countOfWidgets = 0;
     int m_countOfPages = 0;
     int m_countOfFinished = 0;
+    int m_countOfItemsInDB = 0;
+    int m_countOfItems = 0;
     bool m_pgConnected = false;
     bool m_cycle = false;
     bool m_inCycle = false;
     QVector<itemsOfPage> m_listOfItems;
+    QVector<itemsOfPage> m_listOfItemsFromDB;
+    itemsOfPage m_items;
     PGconn* conn = nullptr;
     void cycleOfPages(int countOfWidgets);
     void loadPages();

@@ -96,6 +96,77 @@ void controller::createTable()
     PQclear(res);
 }
 
+void controller::getCountOfItemsInDB()
+{
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* countSQL = "SELECT COUNT(*) FROM items;";
+    PGresult* res = PQexec(conn, countSQL);
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    } else {
+        int count = atoi(PQgetvalue(res, 0, 0));
+        m_countOfItemsInDB = count;
+        emit countOfItemsFromDB(count);
+    }
+
+    PQclear(res);
+
+}
+
+void controller::setCountOfItems(int count)
+{
+    m_countOfItems = count;
+    emit countOfItemsIsObtained();
+}
+
+void controller::getListOfItemsFromDB()
+{
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* selectSQL = "SELECT name, id FROM items;";
+    PGresult* res = PQexec(conn, selectSQL);
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting list of items:" << PQerrorMessage(conn);
+    } else {
+        int rows = PQntuples(res);
+        for (int i = 0; i < rows; ++i) {
+            m_items.m_name = PQgetvalue(res, i, 0);
+            m_items.m_id = atoi(PQgetvalue(res, i, 1));
+            m_listOfItemsFromDB.append(m_items);
+        }
+    }
+
+    PQclear(res);
+
+    emit listOfItemsFromDB(m_listOfItemsFromDB);
+}
+
+void controller::compareCountOfItems()
+{
+    if(m_countOfItems == 0 || m_countOfItemsInDB == 0){
+        return;
+    }else if(m_countOfItems == m_countOfItemsInDB){
+        qDebug() << "Count of items in DB is equal to count of items in Steam. \nCount: " << m_countOfItems;
+    }else if(m_countOfItems > m_countOfItemsInDB){
+        qDebug() << "Appeared new items";
+        qDebug() << "Count of items in DB: " << m_countOfItemsInDB;
+        qDebug() << "Count of items in Steam: " << m_countOfItems;
+    }
+}
+
+void controller::compareData(QVector<itemsOfPage> listOfItems)
+{
+}
+
 void controller::getCountOfPages()
 {
     steamReader* reader = new steamReader(1);

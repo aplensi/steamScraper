@@ -47,7 +47,6 @@ void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
     QJsonValue value = jsonObj.value("total_count");
     if (value.isDouble()) {
         int count = value.toInt();
-        qDebug() << "Count of items:" << count;
         m_countOfItems = count;
         emit sendCountOfPages(count);
     } else {
