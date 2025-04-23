@@ -146,7 +146,6 @@ void controller::getListOfItemsFromDB()
     }
 
     PQclear(res);
-
     emit listOfItemsFromDB(m_listOfItemsFromDB);
 }
 
@@ -156,15 +155,44 @@ void controller::compareCountOfItems()
         return;
     }else if(m_countOfItems == m_countOfItemsInDB){
         qDebug() << "Count of items in DB is equal to count of items in Steam. \nCount: " << m_countOfItems;
+        emit continueReadItems();
     }else if(m_countOfItems > m_countOfItemsInDB){
         qDebug() << "Appeared new items";
         qDebug() << "Count of items in DB: " << m_countOfItemsInDB;
         qDebug() << "Count of items in Steam: " << m_countOfItems;
+        emit getMissingItems();
     }
 }
 
-void controller::compareData(QVector<itemsOfPage> listOfItems)
+void controller::compareData()
 {
+    if(m_listOfItemsFromDB.isEmpty() || m_listOfItems.isEmpty()){
+        qDebug() << "List of items from DB is empty.";
+        return;
+    }
+    bool found;
+    for(auto& i : m_listOfItems){
+        found = false;
+        for(auto& j : m_listOfItemsFromDB){
+            if(i.m_name == j.m_name){
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            m_listOfNewItems.append(i);
+        }
+    }
+    for(auto i : m_listOfNewItems){
+        qDebug() << "New item: " << i.m_name << " ID: " << i.m_id;
+    }
+    emit dataIsCompared(m_listOfNewItems);
+}
+
+void controller::setListOfItems(QVector<itemsOfPage> listOfItems)
+{
+    m_listOfItems = listOfItems;
+    emit listOfItemsIsObtained();
 }
 
 void controller::getCountOfPages()
