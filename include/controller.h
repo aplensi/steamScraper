@@ -13,6 +13,7 @@ public:
     void createTable();
     void getCountOfItemsInDB();
     void getListOfItemsFromDB();
+    void getDataFromDB();
 
     void loadPages(int countOfWidgets, int countOfPages, bool cycle);
     void loadPages(int countOfWidgets, bool cycle);
@@ -50,6 +51,7 @@ private:
     bool m_pgConnected = false;
     bool m_cycle = false;
     bool m_inCycle = false;
+    int m_countOfCompares = 0;
     QVector<itemsOfPage> m_listOfItems;
     QVector<itemsOfPage> m_listOfItemsFromDB;
     QVector<itemsOfPage> m_listOfNewItems;

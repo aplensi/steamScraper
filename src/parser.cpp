@@ -43,6 +43,7 @@ void parser::getCountOfPagesFromBuffer(QString html)
 
 void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
 {
+    m_countOfItems = 0;
     QJsonObject jsonObj = jsonDocl.object();
     QJsonValue value = jsonObj.value("total_count");
     if (value.isDouble()) {

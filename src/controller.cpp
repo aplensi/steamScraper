@@ -67,8 +67,6 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
         PQclear(copyRes);
     }
 
-    // qDebug() << "Time push to sql elapsed:" << timerPush.elapsed() / 1000.0 << "seconds";
-    // qDebug() << "Timer of program elapsed:" << m_timer.elapsed() / 1000.0 << "seconds";
     qDebug() << "Data pushed to PostgreSQL.";
     emit dataIsPushedToPgSQL();
 }
@@ -134,6 +132,12 @@ void controller::getCountOfItemsInDB()
 
 }
 
+void controller::getDataFromDB()
+{
+    getCountOfItemsInDB();
+    getListOfItemsFromDB();
+}
+
 void controller::setCountOfItems(int count)
 {
     m_countOfItems = count;
@@ -167,25 +171,24 @@ void controller::getListOfItemsFromDB()
 
 void controller::compareCountOfItems()
 {
-    if(m_countOfItems == 0 || m_countOfItemsInDB == 0){
-        return;
-    }else if(m_countOfItems == m_countOfItemsInDB){
-        qDebug() << "Count of items in DB is equal to count of items in Steam. \nCount: " << m_countOfItems;
-        emit continueReadItems();
-    }else if(m_countOfItems > m_countOfItemsInDB){
-        qDebug() << "Appeared new items";
-        qDebug() << "Count of items in DB: " << m_countOfItemsInDB;
-        qDebug() << "Count of items in Steam: " << m_countOfItems;
-        emit getMissingItems();
+    m_countOfCompares++;
+    if(m_countOfCompares == 2){
+        if(m_countOfItems == m_countOfItemsInDB){
+            qDebug() << "Count of items in DB is equal to count of items in Steam. \nCount: " << m_countOfItems;
+            emit continueReadItems();
+            m_countOfCompares = 0;
+        }else{
+            qDebug() << "Appeared new items";
+            qDebug() << "Count of items in DB: " << m_countOfItemsInDB;
+            qDebug() << "Count of items in Steam: " << m_countOfItems;
+            emit getMissingItems();
+            m_countOfCompares = 0;
+        }
     }
 }
 
 void controller::compareData()
 {
-    if(m_listOfItemsFromDB.isEmpty() || m_listOfItems.isEmpty()){
-        qDebug() << "List of items from DB is empty.";
-        return;
-    }
     bool found;
     for(auto& i : m_listOfItems){
         found = false;
@@ -202,6 +205,7 @@ void controller::compareData()
     for(auto i : m_listOfNewItems){
         qDebug() << "New item: " << i.m_name;
     }
+    qDebug() << "Count of new items: " << m_listOfNewItems.length();
     emit dataIsCompared(m_listOfNewItems);
 }
 

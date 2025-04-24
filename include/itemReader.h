@@ -21,9 +21,6 @@ public slots:
     void pageWithTooManyRequests(QString name);
 private:
 void startProxy();
-QNetworkAccessManager* m_networkManager;
-QNetworkRequest* m_request;
-QNetworkReply* m_reply;
 };
 
 

@@ -4,9 +4,9 @@ void itemReader::getCountOfItemsJson()
 {
     QUrl url("https://steamcommunity.com/market/search/render/?query=&norender=1&appid=252490");
     QNetworkRequest request(url);
-    m_networkManager = new QNetworkAccessManager();
+    QNetworkAccessManager* m_networkManager = new QNetworkAccessManager();
     m_networkManager->get(request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, [this](QNetworkReply* reply) {
+    connect(m_networkManager, &QNetworkAccessManager::finished, [this, m_networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
@@ -16,6 +16,9 @@ void itemReader::getCountOfItemsJson()
         }else{
             emit getCountOfItemsIsFinished(jsonDoc);
         }
+        m_networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
     });
 }
 void itemReader::cycleOfReadItems(int countOfItems)
@@ -30,10 +33,10 @@ void itemReader::cycleOfReadItems(int countOfItems)
 void itemReader::readItems(int start)
 {
     QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=100&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
-    m_request = new QNetworkRequest(url);
-    m_networkManager = new QNetworkAccessManager();
-    m_networkManager->get(*m_request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, [this, start](QNetworkReply* reply) {
+    QNetworkRequest request(url);
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    networkManager->get(request);
+    connect(networkManager, &QNetworkAccessManager::finished, [this, start, networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
@@ -42,13 +45,14 @@ void itemReader::readItems(int start)
         }else{
             emit readCatalogIsFinished(jsonDoc);
         }
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
     });
 }
 
 void itemReader::cycleOfReadPages(QVector<itemsOfPage> listOfItems)
 {
-    m_networkManager->deleteLater();
-    delete m_request;
     for(int i = 0; i < 100 && i < listOfItems.length(); i++){
         readPageOfItem(listOfItems[i].m_name);
     }
@@ -58,19 +62,19 @@ void itemReader::readPageOfItem(QString nameOfItem)
 {
     QString encodedName = QUrl::toPercentEncoding(nameOfItem);
     QUrl url("https://steamcommunity.com/market/listings/252490/" + encodedName);
-    m_request = new QNetworkRequest(url);
-    m_networkManager = new QNetworkAccessManager(this);
-    m_networkManager->get(*m_request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, [this, nameOfItem](QNetworkReply* reply) {
+    QNetworkRequest request(url);
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    networkManager->get(request);
+    connect(networkManager, &QNetworkAccessManager::finished, [this, nameOfItem, networkManager, request](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QString responseString = QString::fromUtf8(responseData);
-        reply->deleteLater();
         if(responseString.isEmpty()) {
             startProxy();
             readPageOfItem(nameOfItem);
         }else{
             emit readPageOfItemIsFinished(responseString, nameOfItem);
         }
+        networkManager->deleteLater();
     });
 }
 
