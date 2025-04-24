@@ -27,6 +27,7 @@ public slots:
     void readItemsFromJson(QJsonDocument jsonDoc);
     void parsPageOfItem(QString html, QString nameOfItem);
     QVector<itemsOfPage> getListOfItems();
+    void setCountOfDBItems(int count);
 signals:
     void sendListOfItems(QVector<itemsOfPage> listOfItems);
     void sendCountOfPages(int count);
@@ -39,6 +40,7 @@ private:
     void parsPageOfMarketPlace(QString line);
     QString m_html;
     QFile m_file;
+    int m_countOfItemsDB = 0;
     int m_countOfItems = 0;
     int m_countOfReadedItems = 0;
     int m_finishedThreads = 0;

@@ -29,6 +29,7 @@ signals:
     void getMissingItems();
     void continueReadItems();
     void dataIsCompared(QVector<itemsOfPage> listOfNewItems);
+    void pushNewDataToPgSQL(QVector<itemsOfPage> listOfNewItems);
 public slots:
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
@@ -36,6 +37,7 @@ public slots:
     void collectDataFromPages(QVector<itemsOfPage> listOfItems);
     void compareCountOfItems();
     void compareData();
+    void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
 private:
     steamReader* m_reader;
     parser* m_parser;

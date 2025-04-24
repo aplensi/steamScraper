@@ -82,47 +82,51 @@ void parser::readItemsFromJson(QJsonDocument jsonDoc)
 void parser::parsPageOfItem(QString html, QString nameOfItem)
 {
     QRegularExpression regex(R"(.*Market_LoadOrderSpread\(\s*(\d+)\s*\).*;)");
-    QRegularExpression error(R"(.*You've made too many requests recently\. Please wait and try your request again later\..*)");
-    QRegularExpression error1(R"(.*You don't have permission to access.*)");
     QRegularExpressionMatch match = regex.match(html);
-    QRegularExpressionMatch matchEr = error.match(html);
-    QRegularExpressionMatch matchEr1 = error1.match(html);
 
-    if(matchEr.hasMatch() || matchEr1.hasMatch()){
-        emit brockenPageOfItem(nameOfItem);
-    }else{
-        if (match.hasMatch()) {
-            int capturedNumber = match.captured(1).toInt();
+    if (match.hasMatch()) {
+        int capturedNumber = match.captured(1).toInt();
+        for(auto& i : m_listOfItems){
+            if(i.m_name == nameOfItem){
+                i.m_id = capturedNumber;
+                m_countOfReadedItems++;
+                m_finishedThreads++;
+                qDebug() << "Item name:" << i.m_name << " || ID of item:" << i.m_id;
+            }
+        }
+        if(m_finishedThreads == 100){
+            QVector<itemsOfPage> newList;
             for(auto& i : m_listOfItems){
-                if(i.m_name == nameOfItem){
-                    i.m_id = capturedNumber;
-                    m_countOfReadedItems++;
-                    m_finishedThreads++;
-                    qDebug() << "Count of readed items: " << m_countOfReadedItems;
-                    qDebug() << "Item name:" << i.m_name << " || ID of item:" << i.m_id;
+                if(i.m_id == 0){
+                    newList.append(i);
                 }
             }
-            if(m_finishedThreads == 100){
-                QVector<itemsOfPage> newList;
-                for(auto& i : m_listOfItems){
-                    if(i.m_id == 0){
-                        newList.append(i);
-                    }
-                }
-                m_finishedThreads = 0;
-                qDebug() << "count of items in heap:" << newList.length();
-                emit heapIsFinished(newList);
-            }
+            m_finishedThreads = 0;
+            qDebug() << "count of items in heap:" << newList.length();
+            emit heapIsFinished(newList);
+        }
+
+        if(m_countOfItemsDB == 0){
             if(m_countOfReadedItems == m_countOfItems){
                 qDebug() << "All items are parsed.";
                 emit namesAndIdsIsReceived(m_listOfItems);
             }
-        } else {
-            qDebug() << html;
-            qDebug() << "No match found.";
-            QCoreApplication::exit(0);
+        }else{
+            if(m_countOfItemsDB + m_countOfReadedItems == m_countOfItems){
+                qDebug() << "New items are parsed.";
+                qDebug() << "Count of items: " << m_listOfItems.length();
+                emit namesAndIdsIsReceived(m_listOfItems);
+            }
         }
+        qDebug() << "Count of items:" << m_countOfItemsDB + m_countOfReadedItems << " from: " << m_countOfItems;
+    }else {
+        emit brockenPageOfItem(nameOfItem);
     }
+}
+
+void parser::setCountOfDBItems(int count)
+{
+    m_countOfItemsDB = count;
 }
 
 QVector<itemsOfPage> parser::getListOfItems()

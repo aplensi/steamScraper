@@ -73,6 +73,22 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     emit dataIsPushedToPgSQL();
 }
 
+void controller::addIdsToNewItems(QVector<itemsOfPage> listOfItems)
+{
+    for(auto i : listOfItems){
+        for(auto& j : m_listOfNewItems){
+            if(i.m_name == j.m_name){
+                j.m_id = i.m_id;
+                break;
+            }
+        }
+    }
+    emit pushNewDataToPgSQL(m_listOfNewItems);
+    for(auto i : m_listOfNewItems){
+        qDebug() << "New item: " << i.m_name << " ID: " << i.m_id;
+    }
+}
+
 void controller::createTable()
 {
     if (!m_pgConnected || conn == nullptr) {
@@ -82,7 +98,7 @@ void controller::createTable()
 
     const char* createTableSQL =
         "CREATE TABLE IF NOT EXISTS items ("
-        "name VARCHAR(255), "
+        "name VARCHAR(255) PRIMARY KEY, "
         "id INTEGER);";
 
     PGresult* res = PQexec(conn, createTableSQL);
@@ -184,7 +200,7 @@ void controller::compareData()
         }
     }
     for(auto i : m_listOfNewItems){
-        qDebug() << "New item: " << i.m_name << " ID: " << i.m_id;
+        qDebug() << "New item: " << i.m_name;
     }
     emit dataIsCompared(m_listOfNewItems);
 }
