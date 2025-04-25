@@ -11,6 +11,7 @@ class controller : public QObject{
 public:
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
+    void createTableOfItems();
     void getCountOfItemsInDB();
     void getListOfItemsFromDB();
     void getDataFromDB();
@@ -35,6 +36,7 @@ public slots:
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
+    void pushDataOfItemsToPgSQL(QVector<item> listOfItems);
     void collectDataFromPages(QVector<itemsOfPage> listOfItems);
     void compareCountOfItems();
     void compareData();

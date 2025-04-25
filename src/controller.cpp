@@ -71,6 +71,55 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     emit dataIsPushedToPgSQL();
 }
 
+void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
+{
+
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    PGresult* res = PQexec(conn, "COPY pricesofitems (id, sellordercount, sellorderprice, buyordercount, buyorderprice) FROM STDIN");
+    if (PQresultStatus(res) != PGRES_COPY_IN) {
+        qDebug() << "COPY command failed:" << PQerrorMessage(conn);
+        PQclear(res);
+        return;
+    }
+    PQclear(res);
+
+    for (const auto& item : listOfItems) {
+        QString line = QString("%1\t%2\t%3\t%4\t%5\n")
+                           .arg(item.m_id)
+                           .arg(item.m_countOfSale)
+                           .arg(item.m_salePrice)
+                           .arg(item.m_countOfPurchase)
+                           .arg(item.m_purchasePrice);
+        QByteArray utf8Line = line.toUtf8();
+        if (PQputCopyData(conn, utf8Line.constData(), utf8Line.size()) != 1) {
+            qDebug() << "Error sending data:" << PQerrorMessage(conn);
+            PQputCopyEnd(conn, "Error during COPY");
+            return;
+        }
+    }
+
+    if (PQputCopyEnd(conn, nullptr) != 1) {
+        qDebug() << "Error ending COPY:" << PQerrorMessage(conn);
+        return;
+    }
+
+    PGresult* copyRes;
+    while ((copyRes = PQgetResult(conn)) != nullptr) {
+        if (PQresultStatus(copyRes) != PGRES_COMMAND_OK) {
+            qDebug() << "COPY failed:" << PQerrorMessage(conn);
+            PQclear(copyRes);
+            return;
+        }
+        PQclear(copyRes);
+    }
+
+    qDebug() << "Data pushed to PostgreSQL.";
+}
+
 void controller::addIdsToNewItems(QVector<itemsOfPage> listOfItems)
 {
     for(auto i : listOfItems){
@@ -98,6 +147,33 @@ void controller::createTable()
         "CREATE TABLE IF NOT EXISTS items ("
         "name VARCHAR(255) PRIMARY KEY, "
         "id INTEGER);";
+
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Table created successfully.";
+    }
+
+    PQclear(res);
+}
+
+void controller::createTableOfItems()
+{
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS pricesOfItems ("
+        "id INTEGER, "
+        "sellOrderCount INTEGER,"
+        "sellOrderPrice FLOAT,"
+        "buyOrderCount INTEGER,"
+        "buyOrderPrice FLOAT,"
+        "lastUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
 
     PGresult* res = PQexec(conn, createTableSQL);
 

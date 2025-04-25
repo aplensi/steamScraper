@@ -75,6 +75,8 @@ void itemReader::readPageOfItem(QString nameOfItem)
             emit readPageOfItemIsFinished(responseString, nameOfItem);
         }
         networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
     });
 }
 
@@ -99,10 +101,10 @@ void itemReader::loadDataOfItem(int id)
             loadDataOfItem(id);
         }else{
             emit sendJsonOfData(jsonDoc, id);
-            networkManager->deleteLater();
-            reply->deleteLater();
-            reply = nullptr;
         }
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
     });
 }
 
