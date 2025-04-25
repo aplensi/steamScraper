@@ -146,6 +146,7 @@ void controller::setCountOfItems(int count)
 
 void controller::getListOfItemsFromDB()
 {
+    m_listOfItemsFromDB.clear();
     if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
         return;

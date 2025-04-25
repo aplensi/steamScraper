@@ -78,6 +78,34 @@ void itemReader::readPageOfItem(QString nameOfItem)
     });
 }
 
+void itemReader::cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems)
+{
+    for(int i = 0; i < 250 && i < listOfItems.length(); i++){
+        loadDataOfItem(listOfItems[i].m_id);
+    }
+}
+
+void itemReader::loadDataOfItem(int id)
+{
+    QUrl url("https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1");
+    QNetworkRequest request(url);
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    networkManager->get(request);
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id](QNetworkReply* reply) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+        if(responseData == "" || jsonDoc.isNull()) { 
+            startProxy();
+            loadDataOfItem(id);
+        }else{
+            emit sendJsonOfData(jsonDoc, id);
+            networkManager->deleteLater();
+            reply->deleteLater();
+            reply = nullptr;
+        }
+    });
+}
+
 void itemReader::pageWithTooManyRequests(QString name)
 {
     startProxy();

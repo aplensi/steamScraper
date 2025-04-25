@@ -10,17 +10,20 @@ public:
     void getCountOfItemsJson();
     void cycleOfReadItems(int countOfItems);
     void cycleOfReadPages(QVector<itemsOfPage> listOfItems);
+    void cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems);
 signals:
     void getCountOfItemsIsFinished(QJsonDocument jsonDoc);
     void readCatalogIsFinished(QJsonDocument jsonDoc);
     void readItemIsFinished();
     void readPageOfItemIsFinished(QString html, QString nameOfItem);
+    void sendJsonOfData(QJsonDocument jsonDoc, int id);
 public slots:
     void readItems(int start);
     void readPageOfItem(QString nameOfItem);
     void pageWithTooManyRequests(QString name);
+    void loadDataOfItem(int id);
 private:
-void startProxy();
+    void startProxy();
 };
 
 

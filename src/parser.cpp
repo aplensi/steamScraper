@@ -125,6 +125,41 @@ void parser::parsPageOfItem(QString html, QString nameOfItem)
     }
 }
 
+void parser::parsDataOfItem(QJsonDocument jsonDoc, int id)
+{
+    QJsonObject jsonObj = jsonDoc.object();
+    m_item.m_id = id;
+    m_item.m_countOfSale = jsonObj.value("sell_order_count").toString().remove(',').toInt();
+    m_item.m_salePrice = jsonObj.value("sell_order_price").toString().remove('$').toDouble();
+    m_item.m_countOfPurchase = jsonObj.value("buy_order_count").toString().remove(',').toInt();
+    m_item.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').toDouble();
+    m_listOfDataOfItem.append(m_item);
+
+    qDebug() << "ID: " << m_item.m_id << " || Sale price: " << m_item.m_salePrice << " || Purchase price: " << m_item.m_purchasePrice;
+    qDebug() << "Count of sale: " << m_item.m_countOfSale << " || Count of purchase: " << m_item.m_countOfPurchase << "\n";
+
+    if(m_item.m_countOfSale == 0 && m_item.m_countOfPurchase == 0 && m_item.m_salePrice == 0 && m_item.m_purchasePrice == 0){
+        qDebug() << "Error:" << QString(QJsonDocument(jsonObj).toJson(QJsonDocument::Compact));
+    }
+
+    if(m_listOfDataOfItem.length() == m_countOfItemsDB){
+        qDebug() << "All items are parsed.";
+        qDebug() << "Count of items: " << m_listOfDataOfItem.length();
+        emit gettingDataIsOvered(m_listOfDataOfItem);
+        m_listOfDataOfItem.clear();
+    }else if(m_listOfDataOfItem.length() % 250 == 0){
+        QVector<itemsOfPage> newList = m_listOfItemsDB;
+        int length = m_countOfItems - (m_countOfItems - m_listOfDataOfItem.length());
+        newList.remove(0, length);
+        emit dataOfItemIsReceived(newList);
+    }
+}
+
+void parser::setListOfItemsDB(QVector<itemsOfPage> listOfItems)
+{
+    m_listOfItemsDB = listOfItems;
+}
+
 void parser::setCountOfDBItems(int count)
 {
     m_countOfItemsDB = count;

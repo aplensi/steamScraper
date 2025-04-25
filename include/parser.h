@@ -9,12 +9,11 @@ struct itemsOfPage{
 };
 
 struct item{
-    QString m_name;
     int m_id;
     float m_purchasePrice;
-    float m_countOfPurchase;
+    int m_countOfPurchase;
     float m_salePrice;
-    float m_countOfSale;
+    int m_countOfSale;
 };
 
 class parser: public QObject{
@@ -28,6 +27,8 @@ public slots:
     void parsPageOfItem(QString html, QString nameOfItem);
     QVector<itemsOfPage> getListOfItems();
     void setCountOfDBItems(int count);
+    void setListOfItemsDB(QVector<itemsOfPage> listOfItems);
+    void parsDataOfItem(QJsonDocument jsonDoc, int id);
 signals:
     void sendListOfItems(QVector<itemsOfPage> listOfItems);
     void sendCountOfPages(int count);
@@ -36,6 +37,8 @@ signals:
     void namesIsFilled(QVector<itemsOfPage> listOfItems);
     void heapIsFinished(QVector<itemsOfPage> listOfItems);
     void namesAndIdsIsReceived(QVector<itemsOfPage> listOfItems);
+    void dataOfItemIsReceived(QVector<itemsOfPage> listOfItems);
+    void gettingDataIsOvered(QVector<item> listOfDataOfItem);
 private:
     void parsPageOfMarketPlace(QString line);
     QString m_html;
@@ -46,7 +49,10 @@ private:
     int m_finishedThreads = 0;
     QDateTime m_dateTime;
     itemsOfPage m_items;
+    item m_item;
+    QVector<item> m_listOfDataOfItem;
     QVector<itemsOfPage> m_listOfItems;
+    QVector<itemsOfPage> m_listOfItemsDB;
 };
 
 #endif
