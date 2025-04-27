@@ -5,13 +5,10 @@
 #include <QVector>
 #include <QFile>
 #include <QTextStream>
-#include <QWebEngineView>
 #include <QNetworkProxy>
 #include <QDir>
 #include <QTimer>
 #include <QElapsedTimer>
-#include <QWebEngineProfile>
-#include <QWebEngineSettings>
 #include <QApplication>
 #include <QWidget>
 #include <QUrl>

@@ -3,7 +3,6 @@
 
 #include "includes.h"
 #include "parser.h"
-#include "steamReader.h"
 #include "itemReader.h"
 
 class controller : public QObject{
@@ -15,12 +14,6 @@ public:
     void getCountOfItemsInDB();
     void getListOfItemsFromDB();
     void getDataFromDB();
-
-    void loadPages(int countOfWidgets, int countOfPages, bool cycle);
-    void loadPages(int countOfWidgets, bool cycle);
-    void loadPages(int countOfWidgets, int countOfPages);
-    void loadPages(int countOfWidgets);
-    void getCountOfPages();
 signals:
     void pagesAreObtained();
     void dataIsPushedToPgSQL();
@@ -37,12 +30,10 @@ public slots:
     void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
     void pushDataOfItemsToPgSQL(QVector<item> listOfItems);
-    void collectDataFromPages(QVector<itemsOfPage> listOfItems);
     void compareCountOfItems();
     void compareData();
     void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
 private:
-    steamReader* m_reader;
     parser* m_parser;
     QElapsedTimer m_timer;
     int m_countOfWidgets = 0;
@@ -59,8 +50,6 @@ private:
     QVector<itemsOfPage> m_listOfNewItems;
     itemsOfPage m_items;
     PGconn* conn = nullptr;
-    void cycleOfPages(int countOfWidgets);
-    void loadPages();
 };
 
 #endif

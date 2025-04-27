@@ -82,7 +82,7 @@ void itemReader::readPageOfItem(QString nameOfItem)
 
 void itemReader::cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems)
 {
-    for(int i = 0; i < 250 && i < listOfItems.length(); i++){
+    for(int i = 0; i < 200 && i < listOfItems.length(); i++){
         loadDataOfItem(listOfItems[i].m_id);
     }
 }
