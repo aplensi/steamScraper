@@ -14,6 +14,8 @@ public:
     void getCountOfItemsInDB();
     void getListOfItemsFromDB();
     void getDataFromDB();
+    void setConnectionsOfMethods();
+    void startCycleOfProgram();
 signals:
     void pagesAreObtained();
     void dataIsPushedToPgSQL();
@@ -25,6 +27,7 @@ signals:
     void continueReadItems();
     void dataIsCompared(QVector<itemsOfPage> listOfNewItems);
     void pushNewDataToPgSQL(QVector<itemsOfPage> listOfNewItems);
+    void dataOfItemIsPushedToPgSQL();
 public slots:
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
@@ -35,14 +38,11 @@ public slots:
     void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
 private:
     parser* m_parser;
+    itemReader* m_reader;
     QElapsedTimer m_timer;
-    int m_countOfWidgets = 0;
-    int m_countOfPages = 0;
-    int m_countOfFinished = 0;
     int m_countOfItemsInDB = 0;
     int m_countOfItems = 0;
     bool m_pgConnected = false;
-    bool m_cycle = false;
     bool m_inCycle = false;
     int m_countOfCompares = 0;
     QVector<itemsOfPage> m_listOfItems;

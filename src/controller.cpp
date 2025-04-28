@@ -118,6 +118,7 @@ void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
     }
 
     qDebug() << "Data pushed to PostgreSQL.";
+    emit dataOfItemIsPushedToPgSQL();
 }
 
 void controller::addIdsToNewItems(QVector<itemsOfPage> listOfItems)
@@ -222,7 +223,6 @@ void controller::setCountOfItems(int count)
 
 void controller::getListOfItemsFromDB()
 {
-    m_listOfItemsFromDB.clear();
     if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
         return;  // Everything will be fine - your own will stab you with a knife. You are sick in the head - that means you are armed.
@@ -279,9 +279,6 @@ void controller::compareData()
             m_listOfNewItems.append(i);
         }
     }
-    for(auto i : m_listOfNewItems){
-        qDebug() << "New item: " << i.m_name;
-    }
     qDebug() << "Count of new items: " << m_listOfNewItems.length();
     emit dataIsCompared(m_listOfNewItems);
 }
@@ -290,4 +287,66 @@ void controller::setListOfItems(QVector<itemsOfPage> listOfItems)
 {
     m_listOfItems = listOfItems;
     emit listOfItemsIsObtained();
+}
+
+void controller::startCycleOfProgram()
+{
+    setConnectionsOfMethods();
+    if(!m_inCycle){
+        connect(this, &controller::dataIsPushedToPgSQL, [this](){
+            QTimer::singleShot(2000, [this](){
+                startCycleOfProgram();
+            });
+        });
+        connect(this, &controller::dataOfItemIsPushedToPgSQL, [this](){
+            QTimer::singleShot(2000, [this](){
+                startCycleOfProgram();
+            });
+        });
+        m_inCycle = true;
+    }
+    m_listOfItems.clear();
+    m_listOfNewItems.clear();
+    m_listOfItemsFromDB.clear();
+    getDataFromDB();
+    m_reader->getCountOfItemsJson();
+}
+
+void controller::setConnectionsOfMethods(){
+    QObject::disconnect(this, nullptr, nullptr, nullptr);
+    QObject::disconnect(m_reader, nullptr, nullptr, nullptr);
+    QObject::disconnect(m_parser, nullptr, nullptr, nullptr);
+    delete m_reader;
+    delete m_parser;
+    m_reader = new itemReader();
+    m_parser = new parser();
+    QObject::connect(this, &controller::listOfItemsFromDB, m_parser, &parser::setListOfItemsDB); // получаем количество предметов в БД
+    QObject::connect(this, &controller::countOfItemsFromDB, m_parser, &parser::setCountOfDBItems); // получаем количество предметов в БД
+    QObject::connect(m_reader, &itemReader::getCountOfItemsIsFinished, m_parser, &parser::getCountOfItemsFromJson); // получаем данные со стима и отправляем парситься
+    QObject::connect(m_parser, &parser::sendCountOfPages, this, &controller::setCountOfItems); // отправляем пропарсенные данные в контроллер
+    QObject::connect(this, &controller::countOfItemsIsObtained, this, &controller::compareCountOfItems); // сравниваем данные стима с БД
+    QObject::connect(this, &controller::countOfItemsFromDB, this, &controller::compareCountOfItems); // сравниваем данные БД с данными стима
+
+    QObject::connect(this, &controller::getMissingItems, [this](){
+        QObject::connect(m_parser, &parser::sendCountOfPages, m_reader, &itemReader::cycleOfReadItems); // отправляем количество данных в цикл чтения
+        QObject::connect(m_reader, &itemReader::readCatalogIsFinished, m_parser, &parser::readItemsFromJson); // отправляем пачку данных в парсер
+        QObject::connect(m_parser, &parser::brockenRequest, m_reader, &itemReader::readItems); // в случае ошибки повторяем запрос
+        QObject::connect(m_parser, &parser::namesIsFilled, this, &controller::setListOfItems); // устанавливаем список названий предметов в контроллер
+        QObject::connect(this, &controller::listOfItemsIsObtained, this, &controller::compareData); // сравниваем данные стима с БД
+        QObject::connect(this, &controller::dataIsCompared, m_reader, &itemReader::cycleOfReadPages); // отправляем заполненный список названий в цикл получения id предмета и читаем по пачкам
+        QObject::connect(m_reader, &itemReader::readPageOfItemIsFinished, m_parser, &parser::parsPageOfItem); // отправляем html код страницы скина в парсер
+        QObject::connect(m_parser, &parser::heapIsFinished, m_reader, &itemReader::cycleOfReadPages); // отправляем оставшиеся предметы в цикл получения id предмета
+        QObject::connect(m_parser, &parser::brockenPageOfItem, m_reader, &itemReader::pageWithTooManyRequests); // в случае ошибки повторяем запрос
+        QObject::connect(m_parser, &parser::namesAndIdsIsReceived, this, &controller::addIdsToNewItems); // получаем id предметов
+        QObject::connect(this, &controller::pushNewDataToPgSQL, this, &controller::pushToPgSQL); // отправляем данные в БД
+        m_reader->getCountOfItemsJson();
+    }); // получаем недостающие данные
+
+    QObject::connect(this, &controller::continueReadItems, [this](){
+        QObject::connect(this, &controller::listOfItemsFromDB, m_reader, &itemReader::cycleOfLoadingDataOfItem); // устанавливаем список названий предметов в контроллер
+        QObject::connect(m_reader, &itemReader::sendJsonOfData, m_parser, &parser::parsDataOfItem); // отправляем json с данными в парсер
+        QObject::connect(m_parser, &parser::dataOfItemIsReceived, m_reader, &itemReader::cycleOfLoadingDataOfItem); // получаем данные из БД
+        getListOfItemsFromDB();
+        QObject::connect(m_parser, &parser::gettingDataIsOvered, this, &controller::pushDataOfItemsToPgSQL); // отправляем данные в БД
+    }); // получаем данные скина
 }

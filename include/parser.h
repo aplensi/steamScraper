@@ -19,9 +19,6 @@ struct item{
 class parser: public QObject{
     Q_OBJECT
 public slots:
-    void readFile(QString fileName);
-    void readBuffer(QString html);
-    void getCountOfPagesFromBuffer(QString html);
     void getCountOfItemsFromJson(QJsonDocument jsonDoc);
     void readItemsFromJson(QJsonDocument jsonDoc);
     void parsPageOfItem(QString html, QString nameOfItem);
@@ -30,7 +27,6 @@ public slots:
     void setListOfItemsDB(QVector<itemsOfPage> listOfItems);
     void parsDataOfItem(QJsonDocument jsonDoc, int id);
 signals:
-    void sendListOfItems(QVector<itemsOfPage> listOfItems);
     void sendCountOfPages(int count);
     void brockenRequest(int start);
     void brockenPageOfItem(QString name);

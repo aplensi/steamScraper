@@ -1,46 +1,5 @@
 #include "../include/parser.h"
 
-void parser::readFile(QString fileName)
-{
-    m_listOfItems.clear();
-    m_file.setFileName(fileName);
-    m_file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString line;
-    while(!m_file.atEnd()){
-        line = m_file.readLine();
-        parsPageOfMarketPlace(line);
-    }
-    m_file.close();
-}
-
-void parser::readBuffer(QString html)
-{
-    m_listOfItems.clear();
-    QString sLine;
-    while(true){
-        sLine = html.left(html.indexOf('\n') + 1);
-        if(sLine.indexOf('\n') == -1){
-            break;
-        } 
-        parsPageOfMarketPlace(sLine);
-        html = html.mid(html.indexOf('\n') + 1);
-    }
-    emit sendListOfItems(m_listOfItems);
-}
-
-void parser::getCountOfPagesFromBuffer(QString html)
-{
-    int count = 0;
-    QString sLine;
-    QRegularExpression regex(R"(<span class="market_paging_pagelink">\s*(\d+)\s*</span>)");
-    QRegularExpressionMatchIterator it = regex.globalMatch(html);
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        count = match.captured(1).toInt();
-    }
-    emit sendCountOfPages(count);
-}
-
 void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
 {
     m_countOfItems = 0;
@@ -92,7 +51,6 @@ void parser::parsPageOfItem(QString html, QString nameOfItem)
                 i.m_id = capturedNumber;
                 m_countOfReadedItems++;
                 m_finishedThreads++;
-                qDebug() << "Item name:" << i.m_name << " || ID of item:" << i.m_id;
             }
         }
         if(m_finishedThreads == 100){
@@ -110,16 +68,18 @@ void parser::parsPageOfItem(QString html, QString nameOfItem)
         if(m_countOfItemsDB == 0){
             if(m_countOfReadedItems == m_countOfItems){
                 qDebug() << "All items are parsed.";
+                m_countOfReadedItems = 0;
                 emit namesAndIdsIsReceived(m_listOfItems);
             }
         }else{
             if(m_countOfItemsDB + m_countOfReadedItems == m_countOfItems){
+                m_countOfReadedItems = 0;
                 qDebug() << "New items are parsed.";
                 qDebug() << "Count of items: " << m_listOfItems.length();
                 emit namesAndIdsIsReceived(m_listOfItems);
+
             }
         }
-        qDebug() << "Count of items:" << m_countOfItemsDB + m_countOfReadedItems << " from: " << m_countOfItems;
     }else {
         emit brockenPageOfItem(nameOfItem);
     }
@@ -142,7 +102,6 @@ void parser::parsDataOfItem(QJsonDocument jsonDoc, int id)
         qDebug() << "All items are parsed.";
         qDebug() << "Count of items: " << m_listOfDataOfItem.length();
         emit gettingDataIsOvered(m_listOfDataOfItem);
-        m_listOfDataOfItem.clear();
     }else if(m_listOfDataOfItem.length() % 200 == 0){
         QVector<itemsOfPage> newList = m_listOfItemsDB;
         int length = m_countOfItems - (m_countOfItems - m_listOfDataOfItem.length());
