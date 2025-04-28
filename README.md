@@ -13,4 +13,6 @@ Ultimately, this application should become a telegram bot, in which it will be p
 5. sudo apt install libpq-dev
 
 Also, for this to work, you need to download and run: [Tor](https://community.torproject.org/onion-services/setup/install/) and [TorNet](https://github.com/ByteBreach/tornet)  
-(This is necessary in order to change IP addresses every second.)
+(This is necessary in order to change IP addresses every second.)  
+
+If you use it on VDS, you need to install Xvfb
