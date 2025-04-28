@@ -292,19 +292,16 @@ void controller::setListOfItems(QVector<itemsOfPage> listOfItems)
 void controller::startCycleOfProgram()
 {
     setConnectionsOfMethods();
-    if(!m_inCycle){
-        connect(this, &controller::dataIsPushedToPgSQL, [this](){
-            QTimer::singleShot(2000, [this](){
-                startCycleOfProgram();
-            });
+    connect(this, &controller::dataIsPushedToPgSQL, [this](){
+        QTimer::singleShot(3000, [this](){
+            startCycleOfProgram();
         });
-        connect(this, &controller::dataOfItemIsPushedToPgSQL, [this](){
-            QTimer::singleShot(2000, [this](){
-                startCycleOfProgram();
-            });
+    });
+    connect(this, &controller::dataOfItemIsPushedToPgSQL, [this](){
+        QTimer::singleShot(3000, [this](){
+            startCycleOfProgram();
         });
-        m_inCycle = true;
-    }
+    });
     m_listOfItems.clear();
     m_listOfNewItems.clear();
     m_listOfItemsFromDB.clear();

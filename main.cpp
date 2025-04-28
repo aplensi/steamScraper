@@ -6,7 +6,6 @@ int main(int argc, char** argv){
     controll->connectToPgSQL("server", "123", "0.0.0.0", 5432, "qwer");
     controll->createTable();
     controll->createTableOfItems();
-    controll->setConnectionsOfMethods();
     controll->startCycleOfProgram();
 
     return a.exec();

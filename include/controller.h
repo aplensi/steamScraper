@@ -43,7 +43,6 @@ private:
     int m_countOfItemsInDB = 0;
     int m_countOfItems = 0;
     bool m_pgConnected = false;
-    bool m_inCycle = false;
     int m_countOfCompares = 0;
     QVector<itemsOfPage> m_listOfItems;
     QVector<itemsOfPage> m_listOfItemsFromDB;
