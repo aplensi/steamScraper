@@ -26,7 +26,10 @@ public slots:
     void setCountOfDBItems(int count);
     void setListOfItemsDB(QVector<itemsOfPage> listOfItems);
     void parsDataOfItem(QJsonDocument jsonDoc, int id);
+    void parsBotUpdate(QJsonDocument jsonDoc);
 signals:
+    void emptyRequest();
+    void updateIdIsSet(int id);
     void sendCountOfPages(int count);
     void brockenRequest(int start);
     void brockenPageOfItem(QString name);

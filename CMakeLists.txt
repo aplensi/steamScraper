@@ -24,6 +24,8 @@ src/parser.cpp
 include/controller.h
 src/controller.cpp
 include/itemReader.h
-src/itemReader.cpp)
+src/itemReader.cpp
+include/telegramBot.h
+src/telegramBot.cpp)
 
 target_link_libraries(steamScrapers PRIVATE Qt6::Core Qt6::Widgets Qt6::WebEngineWidgets pq)

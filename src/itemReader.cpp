@@ -92,8 +92,16 @@ void itemReader::loadDataOfItem(int id)
     QUrl url("https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1");
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    QTimer* timer = new QTimer(this);
     networkManager->get(request);
-    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id](QNetworkReply* reply) {
+    connect(timer, &QTimer::timeout, [this, id, networkManager, timer]() {
+        disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
+        networkManager->deleteLater();
+        timer->stop();
+        timer->deleteLater();
+        loadDataOfItem(id);
+    });
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id, timer](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(responseData == "" || jsonDoc.isNull()) { 
@@ -101,11 +109,14 @@ void itemReader::loadDataOfItem(int id)
             loadDataOfItem(id);
         }else{
             emit sendJsonOfData(jsonDoc, id);
+            timer->stop();
         }
         networkManager->deleteLater();
         reply->deleteLater();
+        timer->deleteLater();
         reply = nullptr;
     });
+    timer->start(10000);
 }
 
 void itemReader::pageWithTooManyRequests(QString name)

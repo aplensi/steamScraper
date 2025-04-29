@@ -4,6 +4,7 @@
 #include "includes.h"
 #include "parser.h"
 #include "itemReader.h"
+#include "telegramBot.h"
 
 class controller : public QObject{
     Q_OBJECT

@@ -1,5 +1,34 @@
 #include "../include/parser.h"
 
+void parser::parsBotUpdate(QJsonDocument jsonDoc)
+{
+    int updateId = 0;
+    int chatId = 0;
+    QString name = "";
+    QString text = "";
+    QJsonObject jsonObj = jsonDoc.object();
+    QJsonArray itemsArray = jsonObj.value("result").toArray();
+    if(!itemsArray.isEmpty()){
+        for (const QJsonValue& value : itemsArray) {
+            QJsonObject messageObj = value.toObject();
+            QJsonObject message = messageObj.value("message").toObject();
+            updateId = value.toObject().value("update_id").toInt();
+            name = message.value("chat").toObject().value("username").toString();
+            text = message.value("text").toString();
+            chatId = message.value("chat").toObject().value("id").toInt();
+            qDebug() << "chat ID: " << chatId;
+            qDebug() << "Name: " << name;
+            qDebug() << "Message: " << text;
+        }
+    }
+    if(updateId != 0){
+        qDebug() << "Data: " << jsonDoc;
+        emit updateIdIsSet(updateId);
+    }else{
+        emit emptyRequest();
+    }
+}
+
 void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
 {
     m_countOfItems = 0;
