@@ -3,8 +3,12 @@
 void telegramBot::cycleOfGetUpdates(){
     m_parser = new parser();
     connect(this, &telegramBot::updateIsObtained, m_parser, &parser::parsBotUpdate);
+
     connect(m_parser, &parser::updateIdIsSet, this, &telegramBot::setUpdateIdToFile);
     connect(m_parser, &parser::emptyRequest, this, &telegramBot::getUpdates);
+
+    connect(m_parser, &parser::commandStart, this, &telegramBot::answerStartCommand);
+
     connect(this, &telegramBot::idIsSet, this, &telegramBot::getUpdates);
 }
 
@@ -19,6 +23,16 @@ void telegramBot::getUpdates(){
         reply->deleteLater();
         manager->deleteLater();
     });
+    manager->get(request);
+}
+
+void telegramBot::answerStartCommand(int chatId){
+    sendMessage(chatId, "123");
+}
+
+void telegramBot::sendMessage(int chatId, QString text){
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl("https://api.telegram.org/bot" + m_token + "/sendMessage?chat_id=" + QString::number(chatId)+"&text=" + text));
     manager->get(request);
 }
 

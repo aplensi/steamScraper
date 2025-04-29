@@ -22,7 +22,9 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
         }
     }
     if(updateId != 0){
-        qDebug() << "Data: " << jsonDoc;
+        if(text == "/start"){
+            emit commandStart(chatId);
+        }
         emit updateIdIsSet(updateId);
     }else{
         emit emptyRequest();

@@ -19,18 +19,22 @@ struct item{
 class parser: public QObject{
     Q_OBJECT
 public slots:
-    void getCountOfItemsFromJson(QJsonDocument jsonDoc);
+    void getCountOfItemsFromJson(QJsonDocument jsonDoc);        // itemReader
     void readItemsFromJson(QJsonDocument jsonDoc);
     void parsPageOfItem(QString html, QString nameOfItem);
     QVector<itemsOfPage> getListOfItems();
     void setCountOfDBItems(int count);
     void setListOfItemsDB(QVector<itemsOfPage> listOfItems);
-    void parsDataOfItem(QJsonDocument jsonDoc, int id);
+
+    void parsDataOfItem(QJsonDocument jsonDoc, int id);         // tgBot
     void parsBotUpdate(QJsonDocument jsonDoc);
+
 signals:
-    void emptyRequest();
+    void emptyRequest();                                        // tgBot
     void updateIdIsSet(int id);
-    void sendCountOfPages(int count);
+    void commandStart(int chatId);
+
+    void sendCountOfPages(int count);                           // itemReader
     void brockenRequest(int start);
     void brockenPageOfItem(QString name);
     void namesIsFilled(QVector<itemsOfPage> listOfItems);

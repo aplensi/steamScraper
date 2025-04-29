@@ -15,7 +15,9 @@ signals:
     void idIsSet(); 
     void updateIsObtained(QJsonDocument jsonDoc);
 private:
+    void answerStartCommand(int chatId);
     void setUpdateIdToFile(int id);
+    void sendMessage(int chatId, QString text);
     QString m_file;
     QString m_token;
     QString m_updateId = "-1";
