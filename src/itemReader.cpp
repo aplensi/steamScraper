@@ -4,19 +4,19 @@ void itemReader::getCountOfItemsJson()
 {
     QUrl url("https://steamcommunity.com/market/search/render/?query=&norender=1&appid=252490");
     QNetworkRequest request(url);
-    QNetworkAccessManager* m_networkManager = new QNetworkAccessManager();
-    m_networkManager->get(request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, [this, m_networkManager](QNetworkReply* reply) {
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    startProxy(networkManager);
+    networkManager->get(request);
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
             qDebug() << "Error: Failed to parse JSON.";
-            startProxy();
             getCountOfItemsJson();
         }else{
             emit getCountOfItemsIsFinished(jsonDoc);
         }
-        m_networkManager->deleteLater();
+        networkManager->deleteLater();
         reply->deleteLater();
         reply = nullptr;
     });
@@ -35,12 +35,12 @@ void itemReader::readItems(int start)
     QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=100&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    startProxy(networkManager);
     networkManager->get(request);
     connect(networkManager, &QNetworkAccessManager::finished, [this, start, networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
-            startProxy();
             readItems(start);
         }else{
             emit readCatalogIsFinished(jsonDoc);
@@ -64,12 +64,12 @@ void itemReader::readPageOfItem(QString nameOfItem)
     QUrl url("https://steamcommunity.com/market/listings/252490/" + encodedName);
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    startProxy(networkManager);
     networkManager->get(request);
     connect(networkManager, &QNetworkAccessManager::finished, [this, nameOfItem, networkManager, request](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QString responseString = QString::fromUtf8(responseData);
         if(responseString.isEmpty()) {
-            startProxy();
             readPageOfItem(nameOfItem);
         }else{
             emit readPageOfItemIsFinished(responseString, nameOfItem);
@@ -93,6 +93,7 @@ void itemReader::loadDataOfItem(int id)
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
     QTimer* timer = new QTimer(this);
+    startProxy(networkManager);
     networkManager->get(request);
     connect(timer, &QTimer::timeout, [this, id, networkManager, timer]() {
         disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
@@ -105,7 +106,6 @@ void itemReader::loadDataOfItem(int id)
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(responseData == "" || jsonDoc.isNull()) { 
-            startProxy();
             loadDataOfItem(id);
         }else{
             emit sendJsonOfData(jsonDoc, id);
@@ -119,17 +119,8 @@ void itemReader::loadDataOfItem(int id)
     timer->start(10000);
 }
 
-void itemReader::pageWithTooManyRequests(QString name)
+void itemReader::startProxy(QNetworkAccessManager *manager) 
 {
-    startProxy();
-    readPageOfItem(name);
-}
-
-void itemReader::startProxy() 
-{
-    QString proxyHost = "127.0.0.1";
-    int proxyPort = 9050;
-
-    QNetworkProxy networkProxy(QNetworkProxy::Socks5Proxy, proxyHost, proxyPort);
-    QNetworkProxy::setApplicationProxy(networkProxy);
+    QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 9050);
+    manager->setProxy(proxy);
 }

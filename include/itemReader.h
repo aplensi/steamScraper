@@ -20,10 +20,9 @@ signals:
 public slots:
     void readItems(int start);
     void readPageOfItem(QString nameOfItem);
-    void pageWithTooManyRequests(QString name);
     void loadDataOfItem(int id);
 private:
-    void startProxy();
+    void startProxy(QNetworkAccessManager *manager);
 };
 
 

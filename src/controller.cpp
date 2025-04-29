@@ -333,7 +333,7 @@ void controller::setConnectionsOfMethods(){
         QObject::connect(this, &controller::dataIsCompared, m_reader, &itemReader::cycleOfReadPages); // отправляем заполненный список названий в цикл получения id предмета и читаем по пачкам
         QObject::connect(m_reader, &itemReader::readPageOfItemIsFinished, m_parser, &parser::parsPageOfItem); // отправляем html код страницы скина в парсер
         QObject::connect(m_parser, &parser::heapIsFinished, m_reader, &itemReader::cycleOfReadPages); // отправляем оставшиеся предметы в цикл получения id предмета
-        QObject::connect(m_parser, &parser::brockenPageOfItem, m_reader, &itemReader::pageWithTooManyRequests); // в случае ошибки повторяем запрос
+        QObject::connect(m_parser, &parser::brockenPageOfItem, m_reader, &itemReader::readPageOfItem); // в случае ошибки повторяем запрос
         QObject::connect(m_parser, &parser::namesAndIdsIsReceived, this, &controller::addIdsToNewItems); // получаем id предметов
         QObject::connect(this, &controller::pushNewDataToPgSQL, this, &controller::pushToPgSQL); // отправляем данные в БД
         m_reader->getCountOfItemsJson();
