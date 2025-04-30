@@ -320,6 +320,7 @@ void controller::setConnectionsOfMethods(){
     QObject::connect(this, &controller::listOfItemsFromDB, m_parser, &parser::setListOfItemsDB); // получаем количество предметов в БД
     QObject::connect(this, &controller::countOfItemsFromDB, m_parser, &parser::setCountOfDBItems); // получаем количество предметов в БД
     QObject::connect(m_reader, &itemReader::getCountOfItemsIsFinished, m_parser, &parser::getCountOfItemsFromJson); // получаем данные со стима и отправляем парситься
+    QObject::connect(m_parser, &parser::countOfItemsIsNull, m_reader, &itemReader::getCountOfItemsJson); // проверяем наличие ошибки в запросе на получение кол-ва предметов
     QObject::connect(m_parser, &parser::sendCountOfPages, this, &controller::setCountOfItems); // отправляем пропарсенные данные в контроллер
     QObject::connect(this, &controller::countOfItemsIsObtained, this, &controller::compareCountOfItems); // сравниваем данные стима с БД
     QObject::connect(this, &controller::countOfItemsFromDB, this, &controller::compareCountOfItems); // сравниваем данные БД с данными стима

@@ -35,6 +35,7 @@ signals:
     void commandStart(int chatId);
 
     void sendCountOfPages(int count);                           // itemReader
+    void countOfItemsIsNull();
     void brockenRequest(int start);
     void brockenPageOfItem(QString name);
     void namesIsFilled(QVector<itemsOfPage> listOfItems);
