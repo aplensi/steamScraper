@@ -9,6 +9,10 @@
 class controller : public QObject{
     Q_OBJECT
 public:
+    void connecToUsersBD(QString userName, QString passWord, QString address, int port, QString nameDatabase);
+    void createStableListOfData();
+    void createTableListOfBotUsers();
+
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
     void createTableOfItems();
@@ -38,18 +42,21 @@ public slots:
     void compareData();
     void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
 private:
+    void pushData(QVector<item> listOfItems, QString tableName);
     parser* m_parser;
     itemReader* m_reader;
     QElapsedTimer m_timer;
     int m_countOfItemsInDB = 0;
     int m_countOfItems = 0;
     bool m_pgConnected = false;
+    bool m_pgConnectedToUserBd = false;
     int m_countOfCompares = 0;
     QVector<itemsOfPage> m_listOfItems;
     QVector<itemsOfPage> m_listOfItemsFromDB;
     QVector<itemsOfPage> m_listOfNewItems;
     itemsOfPage m_items;
     PGconn* conn = nullptr;
+    PGconn* connToUserBd = nullptr;
 };
 
 #endif

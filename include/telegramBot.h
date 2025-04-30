@@ -3,6 +3,7 @@
 
 #include "includes.h"
 #include "parser.h"
+#include "controller.h"
 
 class telegramBot : public QObject{
     Q_OBJECT
@@ -16,6 +17,7 @@ signals:
     void updateIsObtained(QJsonDocument jsonDoc);
 private:
     void answerStartCommand(int chatId);
+    void answerCommandCommand(int chatId);
     void setUpdateIdToFile(int id);
     void sendMessage(int chatId, QString text);
     QString m_file;

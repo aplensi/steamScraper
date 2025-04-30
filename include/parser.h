@@ -16,6 +16,17 @@ struct item{
     int m_countOfSale;
 };
 
+struct user{
+    int m_tgId;
+    int m_steamId;
+};
+
+struct userInventory{
+    int m_steamId;
+    QVector<item> m_listOfItems; 
+    float m_commonPrice;
+};
+
 class parser: public QObject{
     Q_OBJECT
 public slots:
@@ -32,6 +43,7 @@ public slots:
 signals:
     void emptyRequest();                                        // tgBot
     void updateIdIsSet(int id);
+    void commandCommand(int chatId);
     void commandStart(int chatId);
 
     void sendCountOfPages(int count);                           // itemReader

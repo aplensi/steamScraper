@@ -8,6 +8,7 @@ void telegramBot::cycleOfGetUpdates(){
     connect(m_parser, &parser::emptyRequest, this, &telegramBot::getUpdates);
 
     connect(m_parser, &parser::commandStart, this, &telegramBot::answerStartCommand);
+    connect(m_parser, &parser::commandCommand, this, &telegramBot::answerCommandCommand);
 
     connect(this, &telegramBot::idIsSet, this, &telegramBot::getUpdates);
 }
@@ -27,7 +28,14 @@ void telegramBot::getUpdates(){
 }
 
 void telegramBot::answerStartCommand(int chatId){
-    sendMessage(chatId, "123");
+    sendMessage(chatId, "Пока бот нихуя не может, но в течении дня сможет проверитьтекущую стоимость инвентаря и привязать свой профиль к аккаунту tg \n\ngitHub проект: \nhttps://github.com/aplensi/steamScraper");
+}
+void telegramBot::answerCommandCommand(int chatId){
+    sendMessage(chatId, "Список команд: \n\n"
+                        "- /setId:id - связать профиль tg с профилем steam.\n"
+                        "- /getPrice - получить стоимость инвентаря (только с привязанным профилем steam)\n"
+                        "- /showInventory:id - цена любого открытого инвентаря\n\n"
+                        "‼️ \"id\" заменять на steamID64 (его можно олучить тут https://steamid.io )");
 }
 
 void telegramBot::sendMessage(int chatId, QString text){

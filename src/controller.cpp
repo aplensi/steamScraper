@@ -1,5 +1,26 @@
 #include "../include/controller.h"
 
+void controller::connecToUsersBD(QString userName, QString passWord, QString address, int port, QString nameDatabase){
+    QString connInfo = QString("host=%1 port=%2 dbname=%3 user=%4 password=%5")
+                           .arg(address)
+                           .arg(port)
+                           .arg(nameDatabase)
+                           .arg(userName)
+                           .arg(passWord);
+
+    connToUserBd = PQconnectdb(connInfo.toUtf8().constData());
+
+    if (PQstatus(connToUserBd) == CONNECTION_OK) {
+        m_pgConnectedToUserBd = true;
+        qDebug() << "db is connected.";
+    } else {
+        m_pgConnectedToUserBd = false;
+        qDebug() << "db isn't connected:" << PQerrorMessage(connToUserBd);
+        PQfinish(connToUserBd);
+        connToUserBd = nullptr;
+    }
+}
+
 void controller::connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase)
 {
     QString connInfo = QString("host=%1 port=%2 dbname=%3 user=%4 password=%5")
@@ -71,15 +92,28 @@ void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
     emit dataIsPushedToPgSQL();
 }
 
-void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
-{
-
+void controller::pushData(QVector<item> listOfItems, QString tableName){
     if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
         return;
     }
 
-    PGresult* res = PQexec(conn, "COPY pricesofitems (id, sellordercount, sellorderprice, buyordercount, buyorderprice) FROM STDIN");
+    PGresult* res;
+
+    if(tableName == "stablelist"){
+        res = PQexec(conn, "TRUNCATE TABLE stablelist");
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            qDebug() << "TRUNCATE stablelist failed:" << PQerrorMessage(conn);
+            PQclear(res);
+            return;
+        }
+        PQclear(res);
+    }
+
+    QString queryStr = QString("COPY %1 (id, sellordercount, sellorderprice, buyordercount, buyorderprice) FROM STDIN")
+                           .arg(tableName);
+
+    res = PQexec(conn, queryStr.toUtf8().constData());
     if (PQresultStatus(res) != PGRES_COPY_IN) {
         qDebug() << "COPY command failed:" << PQerrorMessage(conn);
         PQclear(res);
@@ -116,7 +150,12 @@ void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
         }
         PQclear(copyRes);
     }
+}
 
+void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
+{
+    pushData(listOfItems, "stablelist");
+    pushData(listOfItems, "pricesOfItems");
     qDebug() << "Data pushed to PostgreSQL.";
     emit dataOfItemIsPushedToPgSQL();
 }
@@ -175,6 +214,54 @@ void controller::createTableOfItems()
         "buyOrderCount INTEGER,"
         "buyOrderPrice FLOAT,"
         "lastUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Table created successfully.";
+    }
+
+    PQclear(res);
+}
+
+void controller::createStableListOfData(){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS stablelist ("
+        "id INTEGER, "
+        "sellOrderCount INTEGER,"
+        "sellOrderPrice FLOAT,"
+        "buyOrderCount INTEGER,"
+        "buyOrderPrice FLOAT,"
+        "lastUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Table created successfully.";
+    }
+
+    PQclear(res);
+}
+
+void controller::createTableListOfBotUsers(){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS users ("
+        "tgId INTEGER PRIMARY KEY, "
+        "steamId INTEGER);";
 
     PGresult* res = PQexec(conn, createTableSQL);
 

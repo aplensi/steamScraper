@@ -24,6 +24,8 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
     if(updateId != 0){
         if(text == "/start"){
             emit commandStart(chatId);
+        }else if(text =="/commands"){
+            emit commandCommand(chatId);
         }
         emit updateIdIsSet(updateId);
     }else{
