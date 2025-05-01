@@ -4,7 +4,6 @@
 #include "includes.h"
 #include "parser.h"
 #include "itemReader.h"
-#include "telegramBot.h"
 
 class controller : public QObject{
     Q_OBJECT
@@ -33,6 +32,7 @@ signals:
     void dataIsCompared(QVector<itemsOfPage> listOfNewItems);
     void pushNewDataToPgSQL(QVector<itemsOfPage> listOfNewItems);
     void dataOfItemIsPushedToPgSQL();
+    void userAdded(int chatId, QString steamId);
 public slots:
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
@@ -41,6 +41,7 @@ public slots:
     void compareCountOfItems();
     void compareData();
     void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
+    void pushUserToDB(int chatId, QString steamId);
 private:
     void pushData(QVector<item> listOfItems, QString tableName);
     parser* m_parser;

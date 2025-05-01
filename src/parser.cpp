@@ -6,9 +6,11 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
     int chatId = 0;
     QString name = "";
     QString text = "";
+    QRegularExpression setIdRegex("/setId:(\\d+)");
     QJsonObject jsonObj = jsonDoc.object();
     QJsonArray itemsArray = jsonObj.value("result").toArray();
     if(!itemsArray.isEmpty()){
+        qDebug() << jsonObj;
         for (const QJsonValue& value : itemsArray) {
             QJsonObject messageObj = value.toObject();
             QJsonObject message = messageObj.value("message").toObject();
@@ -19,17 +21,35 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
             qDebug() << "chat ID: " << chatId;
             qDebug() << "Name: " << name;
             qDebug() << "Message: " << text;
+            QRegularExpressionMatch match = setIdRegex.match(text);
+            if(text == "/start"){
+                emit commandStart(chatId);
+            }else if(text =="/commands"){
+                emit commandCommand(chatId);
+            }else if(match.hasMatch()){
+                emit commandSetId(chatId, match.captured(1));
+            }
         }
     }
     if(updateId != 0){
-        if(text == "/start"){
-            emit commandStart(chatId);
-        }else if(text =="/commands"){
-            emit commandCommand(chatId);
-        }
         emit updateIdIsSet(updateId);
     }else{
         emit emptyRequest();
+    }
+}
+
+void parser::parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDoc){
+    if(!jsonDoc.isNull()){
+        QJsonObject jsonObj = jsonDoc.object();
+        QJsonValue totalInventoryCountValue = jsonObj.value("total_inventory_count");
+        if(totalInventoryCountValue == 0){
+            emit brockenDataOfInventory(chatId, steamId);
+        }else{
+            qDebug() << "count of skins: " << totalInventoryCountValue;
+            emit sendIdAndSteamId(chatId, steamId);
+        }
+    }else{
+        emit brockenDataOfInventory(chatId, steamId);
     }
 }
 

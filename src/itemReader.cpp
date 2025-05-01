@@ -119,6 +119,24 @@ void itemReader::loadDataOfItem(int id)
     timer->start(10000);
 }
 
+void itemReader::getSteamInventory(int chatId, QString steamId){
+    QUrl url("https://steamcommunity.com/inventory/" + steamId + "/252490/2?l=english&norender=1");
+    QNetworkRequest request(url);
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    QTimer* timer = new QTimer(this);
+    startProxy(networkManager);
+    networkManager->get(request);
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, chatId, steamId, timer](QNetworkReply* reply) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+        emit sendResultOfSteamInventory(chatId, steamId, jsonDoc);
+        networkManager->deleteLater();
+        reply->deleteLater();
+        timer->deleteLater();
+        reply = nullptr;
+    });
+}
+
 void itemReader::startProxy(QNetworkAccessManager *manager) 
 {
     QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 9050);

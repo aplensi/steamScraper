@@ -160,6 +160,29 @@ void controller::pushDataOfItemsToPgSQL(QVector<item> listOfItems)
     emit dataOfItemIsPushedToPgSQL();
 }
 
+void controller::pushUserToDB(int chatId, QString steamId) {
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    QString query = QString("INSERT INTO users (tgid, steamid) VALUES (%1, '%2') "
+                            "ON CONFLICT (tgid) DO UPDATE SET steamid = '%2';")
+                            .arg(chatId)
+                            .arg(steamId);
+
+    PGresult* res = PQexec(conn, query.toUtf8().constData());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "INSERT/UPDATE command failed:" << PQerrorMessage(conn);
+        PQclear(res);
+        return;
+    }
+
+    PQclear(res);
+    qDebug() << "Data pushed to users.";
+    emit userAdded(chatId, steamId);
+}
+
 void controller::addIdsToNewItems(QVector<itemsOfPage> listOfItems)
 {
     for(auto i : listOfItems){
@@ -261,7 +284,7 @@ void controller::createTableListOfBotUsers(){
     const char* createTableSQL =
         "CREATE TABLE IF NOT EXISTS users ("
         "tgId INTEGER PRIMARY KEY, "
-        "steamId INTEGER);";
+        "steamId VARCHAR(255));";
 
     PGresult* res = PQexec(conn, createTableSQL);
 

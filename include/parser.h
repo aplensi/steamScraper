@@ -16,14 +16,16 @@ struct item{
     int m_countOfSale;
 };
 
-struct user{
-    int m_tgId;
-    int m_steamId;
+struct userItems{
+    QString m_name;
+    int m_count;
+    float m_price;
+    int m_countOfOffers;
 };
 
 struct userInventory{
     int m_steamId;
-    QVector<item> m_listOfItems; 
+    QVector<userItems> m_listOfItems; 
     float m_commonPrice;
 };
 
@@ -39,12 +41,16 @@ public slots:
 
     void parsDataOfItem(QJsonDocument jsonDoc, int id);         // tgBot
     void parsBotUpdate(QJsonDocument jsonDoc);
+    void parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDocl);
 
 signals:
     void emptyRequest();                                        // tgBot
     void updateIdIsSet(int id);
+    void sendIdAndSteamId(int chatId, QString steamId);
+    void brockenDataOfInventory(int chatId, QString steamId);
     void commandCommand(int chatId);
     void commandStart(int chatId);
+    void commandSetId(int tgId, QString steamId);
 
     void sendCountOfPages(int count);                           // itemReader
     void countOfItemsIsNull();
