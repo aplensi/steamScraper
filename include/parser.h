@@ -41,7 +41,8 @@ public slots:
 
     void parsDataOfItem(QJsonDocument jsonDoc, int id);         // tgBot
     void parsBotUpdate(QJsonDocument jsonDoc);
-    void parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDocl);
+    void parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDoc);
+    void parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc);
 
 signals:
     void emptyRequest();                                        // tgBot
@@ -52,6 +53,10 @@ signals:
     void commandCommand(int chatId);
     void commandStart(int chatId);
     void commandSetId(int tgId, QString steamId);
+    void commandGetPrice(int tgId);
+    void commandShowInvetory(int tgId, QString steamId);
+    void sendUserInventory(int tgId, userInventory usInv);
+    void dontHaveItems(int tgId);
 
     void sendCountOfPages(int count);                           // itemReader
     void countOfItemsIsNull();

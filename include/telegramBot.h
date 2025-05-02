@@ -16,6 +16,7 @@ signals:
     void idIsSet(); 
     void updateIsObtained(QJsonDocument jsonDoc);
 private:
+    void answerDontHaveItems(int tgId);
     void answerNullCountOfItemInventory(int tgId, QString steamId);
     void answerBrockenId(int tgId, QString steamId);
     void answerStartCommand(int chatId);
@@ -23,6 +24,8 @@ private:
     void answerGetInventoryCommad(int chatId, userInventory inventory);
     void answerSetIdCommand(int tgId, QString steamId);
     void setUpdateIdToFile(int id);
+    void setConnections();
+    void deleteConnections();
     void sendMessage(int chatId, QString text);
     int m_countOfBrockenCheckOfInventory = 0;
     QString m_file;

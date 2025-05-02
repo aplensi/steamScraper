@@ -6,11 +6,11 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
     int chatId = 0;
     QString name = "";
     QString text = "";
-    QRegularExpression setIdRegex("/setId:(\\d+)");
+    QRegularExpression setIdRegex("/setid:(\\d+)");
+    QRegularExpression showIncIdRegex("/showinventory:(\\d+)");
     QJsonObject jsonObj = jsonDoc.object();
     QJsonArray itemsArray = jsonObj.value("result").toArray();
     if(!itemsArray.isEmpty()){
-        qDebug() << jsonObj;
         for (const QJsonValue& value : itemsArray) {
             QJsonObject messageObj = value.toObject();
             QJsonObject message = messageObj.value("message").toObject();
@@ -22,12 +22,17 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
             qDebug() << "Name: " << name;
             qDebug() << "Message: " << text;
             QRegularExpressionMatch match = setIdRegex.match(text);
+            QRegularExpressionMatch matchShowInv = showIncIdRegex.match(text);
             if(text == "/start"){
                 emit commandStart(chatId);
             }else if(text =="/commands"){
                 emit commandCommand(chatId);
             }else if(match.hasMatch()){
                 emit commandSetId(chatId, match.captured(1));
+            }else if(text == "/getprice"){
+                emit commandGetPrice(chatId);
+            }else if(matchShowInv.hasMatch()){
+                emit commandShowInvetory(chatId, matchShowInv.captured(1));
             }
         }
     }
@@ -47,6 +52,52 @@ void parser::parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument json
         }else{
             qDebug() << "count of skins: " << totalInventoryCountValue;
             emit sendIdAndSteamId(chatId, steamId);
+        }
+    }else{
+        emit brockenDataOfInventory(chatId, steamId);
+    }
+}
+
+void parser::parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc){
+    userInventory inventory;
+    userItems usItems;
+    if(!jsonDoc.isNull()){
+        QJsonObject jsonObj = jsonDoc.object();
+        QJsonValue totalInventoryCountValue = jsonObj.value("total_inventory_count");
+        QJsonArray descriptionsArray = jsonObj.value("descriptions").toArray();
+        QJsonArray assetsArray = jsonObj.value("assets").toArray();
+        if(totalInventoryCountValue == 0){
+            emit nullCountOfItemsInventory(chatId, steamId);
+        }else{
+            int countOfSkins = 0;
+            for (const QJsonValue& value : descriptionsArray) {
+                QJsonObject itemObj = value.toObject();
+                int isTredable = itemObj.value("market_tradable_restriction").toInt();
+                QString classDescId = itemObj.value("classid").toString();
+                if(isTredable == 7){
+                    int countOfItems = 0;
+                    QString classId = itemObj.value("classid").toString();
+                    QString nameOfItem = itemObj.value("name").toString();
+                    for(const QJsonValue& asset : assetsArray){
+                        QJsonObject assetObj = asset.toObject();
+                        QString classAssetId = assetObj.value("classid").toString();
+                        if(classAssetId == classDescId){
+                            countOfItems++;
+                            countOfSkins++;
+                        }
+                    }
+                    usItems.m_name = nameOfItem;
+                    usItems.m_count = countOfItems;
+                    inventory.m_listOfItems.append(usItems);
+                }else{
+                    continue;
+                }
+            }
+            if(countOfSkins != 0){
+                emit sendUserInventory(chatId, inventory);
+            }else{
+                emit dontHaveItems(chatId);
+            }
         }
     }else{
         emit brockenDataOfInventory(chatId, steamId);

@@ -11,6 +11,8 @@ public:
     void connecToUsersBD(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createStableListOfData();
     void createTableListOfBotUsers();
+    void getSteamIdOfUser(int tgId);
+    void fillUserInventory(int chatId, userInventory usInv);
 
     void connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createTable();
@@ -22,6 +24,8 @@ public:
     void startCycleOfProgram();
     void cycleOfProgram();
 signals:
+    void invOfUserIsFilled(int chatId, userInventory usInv);
+    void setSteamIdOfUser(int chatId, QString steamId);
     void pagesAreObtained();
     void dataIsPushedToPgSQL();
     void countOfItemsIsObtained();

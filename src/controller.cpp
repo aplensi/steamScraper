@@ -318,6 +318,84 @@ void controller::getCountOfItemsInDB()
 
 }
 
+void controller::getSteamIdOfUser(int tgId){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* countSQL = "SELECT steamid FROM users WHERE tgid = $1;;";
+    const char* paramValues[1];
+    paramValues[0] = std::to_string(tgId).c_str();
+
+    PGresult* res = PQexecParams(conn, countSQL, 1, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    } else {
+        QString steamId = QString::fromStdString(PQgetvalue(res, 0, 0));
+        qDebug() << "Steam ID: " << steamId;
+        emit setSteamIdOfUser(tgId, steamId);
+    }
+}
+
+void controller::fillUserInventory(int chatId, userInventory usInv) {
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    if (usInv.m_listOfItems.isEmpty()) {
+        qDebug() << "Item list is empty.";
+        return;
+    }
+
+    QString query = "SELECT items.name, stablelist.id, stablelist.sellorderprice, stablelist.sellordercount "
+                    "FROM stablelist "
+                    "JOIN items ON items.id = stablelist.id "
+                    "WHERE items.name IN (";
+
+    for (size_t i = 0; i < usInv.m_listOfItems.size(); ++i) {
+        query += "$" + QString::number(i + 1);
+        if (i < usInv.m_listOfItems.size() - 1) {
+            query += ", ";
+        }
+    }
+    query += ")";
+
+    const char* queryCStr = query.toUtf8().constData();
+
+    QVector<QByteArray> paramValues(usInv.m_listOfItems.size());
+    for (size_t i = 0; i < usInv.m_listOfItems.size(); ++i) {
+        paramValues[i] = usInv.m_listOfItems[i].m_name.toUtf8();
+    }
+
+    const char* paramPointers[usInv.m_listOfItems.size()];
+    for (size_t i = 0; i < usInv.m_listOfItems.size(); ++i) {
+        paramPointers[i] = paramValues[i].constData();
+    }
+
+    PGresult* res = PQexecParams(conn, queryCStr, usInv.m_listOfItems.size(), nullptr, paramPointers, nullptr, nullptr, 0);
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    } else {
+        int numRows = PQntuples(res);
+        for (int i = 0; i < numRows; ++i) {
+            QString itemName = QString::fromUtf8(PQgetvalue(res, i, 0));
+            for (auto& j : usInv.m_listOfItems) {
+                if (j.m_name == itemName) {
+                    j.m_countOfOffers = std::stoi(PQgetvalue(res, i, 3));
+                    j.m_price = std::stod(PQgetvalue(res, i, 2));
+                }
+            }
+        }
+    }
+
+    emit invOfUserIsFilled(chatId, usInv);
+
+    PQclear(res);
+}
+
 void controller::setCountOfItems(int count)
 {
     m_countOfItems = count;

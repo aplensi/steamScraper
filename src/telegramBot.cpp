@@ -4,6 +4,10 @@ void telegramBot::cycleOfGetUpdates(){
     m_parser = new parser();
     m_reader = new itemReader();
     m_controll = new controller();
+    setConnections();
+}
+
+void telegramBot::setConnections(){
     connect(this, &telegramBot::updateIsObtained, m_parser, &parser::parsBotUpdate);
 
     connect(m_parser, &parser::updateIdIsSet, this, &telegramBot::setUpdateIdToFile);
@@ -12,14 +16,43 @@ void telegramBot::cycleOfGetUpdates(){
     connect(m_parser, &parser::commandStart, this, &telegramBot::answerStartCommand);
     connect(m_parser, &parser::commandCommand, this, &telegramBot::answerCommandCommand);
 
-    connect(m_parser, &parser::commandSetId, m_reader, &itemReader::getSteamInventory);
-    connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsAndCheckSteamId);
-    connect(m_parser, &parser::sendIdAndSteamId, m_controll, &controller::pushUserToDB);
-    connect(m_parser, &parser::nullCountOfItemsInventory, this, &telegramBot::answerNullCountOfItemInventory);
-    connect(m_parser, &parser::brockenDataOfInventory, this, &telegramBot::answerBrockenId);
-    connect(m_controll, &controller::userAdded, this, &telegramBot::answerSetIdCommand);
+    connect(m_parser, &parser::commandSetId, [this](int chatId, QString steamId){
+        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsAndCheckSteamId);
+        connect(m_parser, &parser::sendIdAndSteamId, m_controll, &controller::pushUserToDB);
+        connect(m_parser, &parser::nullCountOfItemsInventory, this, &telegramBot::answerNullCountOfItemInventory);
+        connect(m_parser, &parser::brockenDataOfInventory, this, &telegramBot::answerBrockenId);
+        connect(m_controll, &controller::userAdded, this, &telegramBot::answerSetIdCommand);
+        m_reader->getSteamInventory(chatId, steamId);
+    });
+
+    connect(m_parser, &parser::commandGetPrice, [this](int tgId){
+        connect(m_controll, &controller::setSteamIdOfUser, m_reader, &itemReader::getSteamInventory);
+        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsInventory);
+        connect(m_parser, &parser::brockenDataOfInventory, m_reader, &itemReader::getSteamInventory);
+        connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerDontHaveItems);
+        connect(m_parser, &parser::sendUserInventory, m_controll, &controller::fillUserInventory);
+        connect(m_controll, &controller::invOfUserIsFilled, this, &telegramBot::answerGetInventoryCommad);
+        m_controll->getSteamIdOfUser(tgId);
+    });
+
+    connect(m_parser, &parser::commandShowInvetory, [this](int tgId, QString steamId){
+        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsInventory);
+        connect(m_parser, &parser::nullCountOfItemsInventory, this, &telegramBot::answerNullCountOfItemInventory);
+        connect(m_parser, &parser::brockenDataOfInventory, this, &telegramBot::answerBrockenId);
+        connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerDontHaveItems);
+        connect(m_parser, &parser::sendUserInventory, m_controll, &controller::fillUserInventory);
+        connect(m_controll, &controller::invOfUserIsFilled, this, &telegramBot::answerGetInventoryCommad);
+        m_reader->getSteamInventory(tgId, steamId);
+    });
 
     connect(this, &telegramBot::idIsSet, this, &telegramBot::getUpdates);
+}
+
+void telegramBot::deleteConnections(){
+    disconnect(this, nullptr, nullptr, nullptr);
+    disconnect(m_parser, nullptr, nullptr, nullptr);
+    disconnect(m_reader, nullptr, nullptr, nullptr);
+    disconnect(m_controll, nullptr, nullptr, nullptr);
 }
 
 void telegramBot::connectToDb(QString userName, QString passWord, QString address, int port, QString nameDatabase){
@@ -60,12 +93,19 @@ void telegramBot::answerNullCountOfItemInventory(int tgId, QString steamId){
                         "Пожалуйста введите другой id.");
 }
 
+void telegramBot::answerDontHaveItems(int chatId){
+    sendMessage(chatId, "🤡 Что ты решил проверить? \nУ тебя нет скинов на продажу!");
+}
+
 void telegramBot::answerGetInventoryCommad(int chatId, userInventory inventory){
-    QString message = "Инвентарь: \n";
+    QString message = "🎒 Инвентарь: \n\n";
+    float commonPrice = 0;
     for(auto i : inventory.m_listOfItems){
-        message += "Название: " + i.m_name + " | Цена: " + QString::number(i.m_price) +
+        message += "🔥 Название: " + i.m_name + " | Цена: " + QString::number(i.m_price) +
         " | Количество: " + QString::number(i.m_count) + " | Количество предложений на ТП: " + QString::number(i.m_countOfOffers) + "\n";
+        commonPrice += i.m_price * i.m_count;
     }
+    message += "\n💰 Общая стоимость: " + QString::number(commonPrice) + " баксов нахуй";
     sendMessage(chatId, message);
 }
 
@@ -74,9 +114,9 @@ void telegramBot::answerStartCommand(int chatId){
 }
 void telegramBot::answerCommandCommand(int chatId){
     sendMessage(chatId, "Список команд: \n\n"
-                        "- /setId:id - связать профиль tg с профилем steam.\n"
-                        "- /getPrice - получить стоимость инвентаря (только с привязанным профилем steam)\n"
-                        "- /showInventory:id - цена любого открытого инвентаря\n\n"
+                        "- /setid:id - связать профиль tg с профилем steam.\n"
+                        "- /getprice - получить стоимость инвентаря (только с привязанным профилем steam)\n"
+                        "- /showinventory:id - цена любого открытого инвентаря\n\n"
                         "‼️ \"id\" заменять на steamID64 (его можно получить тут https://steamid.io )");
 }
 
@@ -84,6 +124,8 @@ void telegramBot::sendMessage(int chatId, QString text){
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl("https://api.telegram.org/bot" + m_token + "/sendMessage?chat_id=" + QString::number(chatId)+"&text=" + text));
     manager->get(request);
+    deleteConnections();
+    setConnections();
 }
 
 void telegramBot::setToken(QString token){
