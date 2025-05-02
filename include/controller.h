@@ -20,6 +20,7 @@ public:
     void getDataFromDB();
     void setConnectionsOfMethods();
     void startCycleOfProgram();
+    void cycleOfProgram();
 signals:
     void pagesAreObtained();
     void dataIsPushedToPgSQL();

@@ -15,6 +15,7 @@ void telegramBot::cycleOfGetUpdates(){
     connect(m_parser, &parser::commandSetId, m_reader, &itemReader::getSteamInventory);
     connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsAndCheckSteamId);
     connect(m_parser, &parser::sendIdAndSteamId, m_controll, &controller::pushUserToDB);
+    connect(m_parser, &parser::nullCountOfItemsInventory, this, &telegramBot::answerNullCountOfItemInventory);
     connect(m_parser, &parser::brockenDataOfInventory, this, &telegramBot::answerBrockenId);
     connect(m_controll, &controller::userAdded, this, &telegramBot::answerSetIdCommand);
 
@@ -40,8 +41,23 @@ void telegramBot::getUpdates(){
 }
 
 void telegramBot::answerBrockenId(int tgId, QString steamId){
-    sendMessage(tgId, "🤡 Вы ввели не верный id.\n\nВозможные проблемы:\n- Отсутствие скинов\n- Закрытый инвентарь\n- Неверный id\n\nВ случае, "
-                    "если вы уверены в правильности id, пожалуйста попробуйте снова через несколько секунд.");
+    if(m_countOfBrockenCheckOfInventory < 10){
+        qDebug() << "count brocken tests: " << m_countOfBrockenCheckOfInventory;
+        QTimer::singleShot(500, [this, tgId, steamId](){
+            m_reader->getSteamInventory(tgId, steamId);
+            m_countOfBrockenCheckOfInventory++;
+        });
+    }else{
+        sendMessage(tgId, "🤡 Вы ввели не верный id.\n\nВозможные причины:\n- Закрытый инвентарь\n- Неверный id\n\nВ случае, "
+                            "если вы уверены в правильности id, пожалуйста попробуйте снова через несколько секунд.\n\n"
+                            "(В случае если вы повторно ввели id и все заработало - сообщите нам и Ашир из Нью-Дели будет наказан)");
+        m_countOfBrockenCheckOfInventory = 0;                    
+    }
+    
+}
+void telegramBot::answerNullCountOfItemInventory(int tgId, QString steamId){
+     sendMessage(tgId, "🤡 Инвентарь с нулевым количеством скинов.\n\nВозможные причины:\n- Отсутствие скинов в инвентаре\n- Отсутствие игры на аккаунте\n"
+                        "Пожалуйста введите другой id.");
 }
 
 void telegramBot::answerGetInventoryCommad(int chatId, userInventory inventory){
@@ -75,6 +91,7 @@ void telegramBot::setToken(QString token){
 }
 
 void telegramBot::answerSetIdCommand(int tgId, QString steamId){
+    m_countOfBrockenCheckOfInventory = 0;
     sendMessage(tgId, "Id " + steamId + " успешно связан с вашим аккаунтом");
 }
 

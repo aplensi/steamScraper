@@ -48,6 +48,7 @@ signals:
     void updateIdIsSet(int id);
     void sendIdAndSteamId(int chatId, QString steamId);
     void brockenDataOfInventory(int chatId, QString steamId);
+    void nullCountOfItemsInventory(int chatId, QString steamId);
     void commandCommand(int chatId);
     void commandStart(int chatId);
     void commandSetId(int tgId, QString steamId);

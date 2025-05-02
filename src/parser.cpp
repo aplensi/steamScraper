@@ -43,7 +43,7 @@ void parser::parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument json
         QJsonObject jsonObj = jsonDoc.object();
         QJsonValue totalInventoryCountValue = jsonObj.value("total_inventory_count");
         if(totalInventoryCountValue == 0){
-            emit brockenDataOfInventory(chatId, steamId);
+            emit nullCountOfItemsInventory(chatId, steamId);
         }else{
             qDebug() << "count of skins: " << totalInventoryCountValue;
             emit sendIdAndSteamId(chatId, steamId);
@@ -55,7 +55,6 @@ void parser::parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument json
 
 void parser::getCountOfItemsFromJson(QJsonDocument jsonDocl)
 {
-    m_countOfItems = 0;
     QJsonObject jsonObj = jsonDocl.object();
     QJsonValue value = jsonObj.value("total_count");
     if (value.isDouble()) {
@@ -152,13 +151,14 @@ void parser::parsDataOfItem(QJsonDocument jsonDoc, int id)
     m_item.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').remove(",").toDouble();
     m_listOfDataOfItem.append(m_item);
 
-    qDebug() << "ID: " << m_item.m_id << " || Sale price: " << m_item.m_salePrice << " || Purchase price: " << m_item.m_purchasePrice;
-    qDebug() << "Count of sale: " << m_item.m_countOfSale << " || Count of purchase: " << m_item.m_countOfPurchase << "\n";
+    // qDebug() << "ID: " << m_item.m_id << " || Sale price: " << m_item.m_salePrice << " || Purchase price: " << m_item.m_purchasePrice;
+    // qDebug() << "Count of sale: " << m_item.m_countOfSale << " || Count of purchase: " << m_item.m_countOfPurchase << "\n";
 
     if(m_listOfDataOfItem.length() == m_countOfItemsDB){
         qDebug() << "All items are parsed.";
         qDebug() << "Count of items: " << m_listOfDataOfItem.length();
         emit gettingDataIsOvered(m_listOfDataOfItem);
+        m_listOfDataOfItem.clear();
     }else if(m_listOfDataOfItem.length() % 200 == 0){
         QVector<itemsOfPage> newList = m_listOfItemsDB;
         int length = m_countOfItems - (m_countOfItems - m_listOfDataOfItem.length());

@@ -11,7 +11,6 @@ void itemReader::getCountOfItemsJson()
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
         if(jsonDoc.isNull()) {
-            qDebug() << "Error: Failed to parse JSON.";
             getCountOfItemsJson();
         }else{
             emit getCountOfItemsIsFinished(jsonDoc);
@@ -21,6 +20,7 @@ void itemReader::getCountOfItemsJson()
         reply = nullptr;
     });
 }
+
 void itemReader::cycleOfReadItems(int countOfItems)
 {
     int i = 0;
@@ -92,31 +92,22 @@ void itemReader::loadDataOfItem(int id)
     QUrl url("https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1");
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
-    QTimer* timer = new QTimer(this);
     startProxy(networkManager);
     networkManager->get(request);
-    connect(timer, &QTimer::timeout, [this, id, networkManager, timer]() {
-        disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
-        networkManager->deleteLater();
-        timer->stop();
-        timer->deleteLater();
-        loadDataOfItem(id);
-    });
-    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id, timer](QNetworkReply* reply) {
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
+
         if(responseData == "" || jsonDoc.isNull()) { 
             loadDataOfItem(id);
         }else{
             emit sendJsonOfData(jsonDoc, id);
-            timer->stop();
         }
-        networkManager->deleteLater();
-        reply->deleteLater();
-        timer->deleteLater();
-        reply = nullptr;
     });
-    timer->start(10000);
 }
 
 void itemReader::getSteamInventory(int chatId, QString steamId){
