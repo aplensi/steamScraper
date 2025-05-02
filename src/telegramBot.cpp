@@ -63,14 +63,26 @@ void telegramBot::getUpdates(){
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl("https://api.telegram.org/bot" + m_token + "/getUpdates?offset=" + m_updateId));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply *reply) {
+    QTimer* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, [this, manager, timer]() {
+        disconnect(manager, &QNetworkAccessManager::finished, nullptr, nullptr);
+        manager->deleteLater();
+        timer->stop();
+        timer->deleteLater();
+        disconnect(manager, nullptr, nullptr, nullptr);
+        getUpdates();
+    });
+    connect(manager, &QNetworkAccessManager::finished, [this, timer, manager](QNetworkReply *reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
-        emit updateIsObtained(jsonDoc);
+        disconnect(timer, nullptr, nullptr, nullptr);
         reply->deleteLater();
         manager->deleteLater();
+        timer->deleteLater();
+        emit updateIsObtained(jsonDoc);
     });
     manager->get(request);
+    timer->start(4000);
 }
 
 void telegramBot::answerBrockenId(int tgId, QString steamId){
@@ -110,14 +122,19 @@ void telegramBot::answerGetInventoryCommad(int chatId, userInventory inventory){
 }
 
 void telegramBot::answerStartCommand(int chatId){
-    sendMessage(chatId, "Пока бот нихуя не может, но в течении дня сможет проверить текущую стоимость инвентаря и привязать свой профиль к аккаунту tg \n\ngitHub проект: \nhttps://github.com/aplensi/steamScraper");
+    sendMessage(chatId, "Бот с помощью которого ты сможешь проверить цену инвентаря и связать профиль тг со стимом, чтобы постоянно не вводить id.\n"
+                        "Данные о ценах обновляются каждые 1-3 минуты "
+                        "(зависит от того, какая скорость будет у хостинга).\n Работа над ботом все ещё ведется, код грязный и в какой то степени не оптимизированный "
+                        "так что, пожалуйста, не спамьте командами, а просто дождитесь ответа.\n"
+                        "Проект opensource, если есть желание то можете развернуть бота на своем, более мощном сервере, который может и сможет быстрее обновлять базу."
+                        "\n\ngitHub проекта: \nhttps://github.com/aplensi/steamScraper");
 }
 void telegramBot::answerCommandCommand(int chatId){
     sendMessage(chatId, "Список команд: \n\n"
                         "- /setid:id - связать профиль tg с профилем steam.\n"
                         "- /getprice - получить стоимость инвентаря (только с привязанным профилем steam)\n"
                         "- /showinventory:id - цена любого открытого инвентаря\n\n"
-                        "‼️ \"id\" заменять на steamID64 (его можно получить тут https://steamid.io )");
+                        "‼️ \"id\" заменять на steamID64. Пример: /setid:123456789 \n(его можно получить тут https://steamid.io )");
 }
 
 void telegramBot::sendMessage(int chatId, QString text){

@@ -2,8 +2,7 @@
 Estimated release date: 3045
 
 ### What is it?
-An application for receiving data from the Steam marketplace and sending it to the pgsgl server.  
-Ultimately, this application should become a telegram bot, in which it will be possible to monitor changes in the price of inventory and, in general, some analysis of the marketplace (for now, the application is aimed at the Rust game, but in the future it will be possible to change the game).
+The application for obtaining data from the Steam market (the number of skins on the trading platform, the current prices and the number of offers), sending them to the PGSGL server, as well as telegrams in which you can track the price of inventory and separately items. At the moment, the application is aimed at the Rust game, but in the future it will be possible to change the game. The program is located at an early stage of development, the code is very dirty and not optimized, in further functionality will expand, and optimization improves. At the moment, this is my main project
 
 ### Build:  
 1. sudo apt update
