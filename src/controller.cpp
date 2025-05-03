@@ -332,9 +332,13 @@ void controller::getSteamIdOfUser(int tgId){
     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
         qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
     } else {
-        QString steamId = QString::fromStdString(PQgetvalue(res, 0, 0));
-        qDebug() << "Steam ID: " << steamId;
-        emit setSteamIdOfUser(tgId, steamId);
+        if(PQgetvalue(res, 0, 0) != nullptr){
+            QString steamId = QString::fromStdString(PQgetvalue(res, 0, 0));
+            qDebug() << "Steam ID: " << steamId;
+            emit setSteamIdOfUser(tgId, steamId);
+        }else{
+            emit userIsNotRegistered(tgId);
+        }
     }
 }
 

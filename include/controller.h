@@ -24,6 +24,7 @@ public:
     void startCycleOfProgram();
     void cycleOfProgram();
 signals:
+    void userIsNotRegistered(int tgId);
     void invOfUserIsFilled(int chatId, userInventory usInv);
     void setSteamIdOfUser(int chatId, QString steamId);
     void pagesAreObtained();

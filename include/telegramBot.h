@@ -16,6 +16,7 @@ signals:
     void idIsSet(); 
     void updateIsObtained(QJsonDocument jsonDoc);
 private:
+    void answerUserIsNotRegistered(int tgId);
     void answerDontHaveItems(int tgId);
     void answerNullCountOfItemInventory(int tgId, QString steamId);
     void answerBrockenId(int tgId, QString steamId);

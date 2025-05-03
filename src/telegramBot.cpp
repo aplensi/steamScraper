@@ -27,6 +27,7 @@ void telegramBot::setConnections(){
 
     connect(m_parser, &parser::commandGetPrice, [this](int tgId){
         connect(m_controll, &controller::setSteamIdOfUser, m_reader, &itemReader::getSteamInventory);
+        connect(m_controll, &controller::userIsNotRegistered, this, &telegramBot::answerUserIsNotRegistered);
         connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsInventory);
         connect(m_parser, &parser::brockenDataOfInventory, m_reader, &itemReader::getSteamInventory);
         connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerDontHaveItems);
@@ -85,6 +86,10 @@ void telegramBot::getUpdates(){
     timer->start(4000);
 }
 
+void telegramBot::answerUserIsNotRegistered(int tgId){
+    sendMessage(tgId, "🤡 Чтобы воспользоваться данной командой, для начала вам надо привязать пользователя steam.");
+}
+
 void telegramBot::answerBrockenId(int tgId, QString steamId){
     if(m_countOfBrockenCheckOfInventory < 10){
         qDebug() << "count brocken tests: " << m_countOfBrockenCheckOfInventory;
@@ -124,7 +129,7 @@ void telegramBot::answerGetInventoryCommad(int chatId, userInventory inventory){
 void telegramBot::answerStartCommand(int chatId){
     sendMessage(chatId, "Бот с помощью которого ты сможешь проверить цену инвентаря и связать профиль тг со стимом, чтобы постоянно не вводить id.\n"
                         "Данные о ценах обновляются каждые 1-3 минуты "
-                        "(зависит от того, какая скорость будет у хостинга).\n Работа над ботом все ещё ведется, код грязный и в какой то степени не оптимизированный "
+                        "(зависит от того, какая скорость будет у хостинга).\nРабота над ботом все ещё ведется, код грязный и в какой то степени не оптимизированный "
                         "так что, пожалуйста, не спамьте командами, а просто дождитесь ответа.\n"
                         "Проект opensource, если есть желание то можете развернуть бота на своем, более мощном сервере, который может и сможет быстрее обновлять базу."
                         "\n\ngitHub проекта: \nhttps://github.com/aplensi/steamScraper");
