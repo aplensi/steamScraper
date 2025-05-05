@@ -8,9 +8,9 @@
 class controller : public QObject{
     Q_OBJECT
 public:
-    void connecToUsersBD(QString userName, QString passWord, QString address, int port, QString nameDatabase);
     void createStableListOfData();
     void createTableListOfBotUsers();
+    void createTableAveragePrice();
     void getSteamIdOfUser(int tgId);
     void fillUserInventory(int chatId, userInventory usInv);
 
@@ -24,6 +24,7 @@ public:
     void startCycleOfProgram();
     void cycleOfProgram();
 signals:
+    void timeInRange();
     void userIsNotRegistered(int tgId);
     void invOfUserIsFilled(int chatId, userInventory usInv);
     void setSteamIdOfUser(int chatId, QString steamId);
@@ -39,7 +40,9 @@ signals:
     void pushNewDataToPgSQL(QVector<itemsOfPage> listOfNewItems);
     void dataOfItemIsPushedToPgSQL();
     void userAdded(int chatId, QString steamId);
+    void dayDataInDbIsCollected();
 public slots:
+    void checkTime();
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
@@ -49,6 +52,7 @@ public slots:
     void addIdsToNewItems(QVector<itemsOfPage> listOfItems);
     void pushUserToDB(int chatId, QString steamId);
 private:
+    void collectDayData();
     void pushData(QVector<item> listOfItems, QString tableName);
     parser* m_parser;
     itemReader* m_reader;
@@ -57,6 +61,7 @@ private:
     int m_countOfItems = 0;
     bool m_pgConnected = false;
     bool m_pgConnectedToUserBd = false;
+    bool m_checkInMidNight = false;
     int m_countOfCompares = 0;
     QVector<itemsOfPage> m_listOfItems;
     QVector<itemsOfPage> m_listOfItemsFromDB;

@@ -1,26 +1,5 @@
 #include "../include/controller.h"
 
-void controller::connecToUsersBD(QString userName, QString passWord, QString address, int port, QString nameDatabase){
-    QString connInfo = QString("host=%1 port=%2 dbname=%3 user=%4 password=%5")
-                           .arg(address)
-                           .arg(port)
-                           .arg(nameDatabase)
-                           .arg(userName)
-                           .arg(passWord);
-
-    connToUserBd = PQconnectdb(connInfo.toUtf8().constData());
-
-    if (PQstatus(connToUserBd) == CONNECTION_OK) {
-        m_pgConnectedToUserBd = true;
-        qDebug() << "db is connected.";
-    } else {
-        m_pgConnectedToUserBd = false;
-        qDebug() << "db isn't connected:" << PQerrorMessage(connToUserBd);
-        PQfinish(connToUserBd);
-        connToUserBd = nullptr;
-    }
-}
-
 void controller::connectToPgSQL(QString userName, QString passWord, QString address, int port, QString nameDatabase)
 {
     QString connInfo = QString("host=%1 port=%2 dbname=%3 user=%4 password=%5")
@@ -274,6 +253,32 @@ void controller::createStableListOfData(){
     PQclear(res);
 }
 
+void controller::createTableAveragePrice(){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS tableaverageprice ("
+        "id INTEGER, "
+        "sellOrderCount INTEGER,"
+        "sellOrderPrice FLOAT,"
+        "buyOrderCount INTEGER,"
+        "buyOrderPrice FLOAT,"
+        "lastUpdate DATE);";
+
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Table created successfully.";
+    }
+
+    PQclear(res);
+}
+
 void controller::createTableListOfBotUsers(){
     if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
@@ -400,6 +405,62 @@ void controller::fillUserInventory(int chatId, userInventory usInv) {
     PQclear(res);
 }
 
+void controller::checkTime(){
+    QTime currentTime = QTime::currentTime();
+    if (currentTime >= QTime(0, 0) && currentTime < QTime(1, 0) && m_checkInMidNight == false) {
+        m_checkInMidNight == true;
+        emit timeInRange();
+    }else if(currentTime >= QTime(1, 0)){
+        m_checkInMidNight == false;
+        emit dayDataInDbIsCollected();
+    }else{
+        emit dayDataInDbIsCollected();
+    }
+}
+
+void controller::collectDayData(){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* countSQL =  "BEGIN; "
+                            "INSERT INTO tableaverageprice ("
+                                "id, "
+                                "sellOrderCount, "
+                                "sellOrderPrice, "
+                                "buyOrderCount, "
+                                "buyOrderPrice, "
+                                "lastUpdate) "
+                            "SELECT "
+                                "id, "
+                                "AVG(sellOrderCount)::INTEGER, "
+                                "ROUND(AVG(sellOrderPrice)::numeric, 2), "
+                                "AVG(buyOrderCount)::INTEGER, "
+                                "ROUND(AVG(buyOrderPrice)::numeric, 2), "
+                                "NOW() "
+                            "FROM "
+                                "pricesofitems "
+                            "WHERE "
+                                "lastUpdate >= NOW() - INTERVAL '1 day' "
+                            "GROUP BY "
+                                "id; "
+                            "DELETE FROM pricesofitems "
+                            "WHERE lastUpdate >= NOW() - INTERVAL '1 day'; "
+                            "COMMIT;";
+
+    PGresult* res = PQexec(conn, countSQL);
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    } else {
+        emit dayDataInDbIsCollected();
+    }
+
+    PQclear(res);
+
+}
+
 void controller::setCountOfItems(int count)
 {
     m_countOfItems = count;
@@ -500,17 +561,8 @@ void controller::startCycleOfProgram()
 }
 
 void controller::setConnectionsOfMethods(){
-    connect(this, &controller::dataIsPushedToPgSQL, [this](){
-        QTimer::singleShot(3000, [this](){
-            startCycleOfProgram();
-        });
-    });
-    connect(this, &controller::dataOfItemIsPushedToPgSQL, [this](){
-        QTimer::singleShot(3000, [this](){
-            startCycleOfProgram();
-        });
-    });
 
+    // проверка соответствия данных в дб и в steam
     connect(this, &controller::listOfItemsFromDB, m_parser, &parser::setListOfItemsDB); // получаем количество предметов в БД
     connect(this, &controller::countOfItemsFromDB, m_parser, &parser::setCountOfDBItems); // получаем количество предметов в БД
     connect(m_reader, &itemReader::getCountOfItemsIsFinished, m_parser, &parser::getCountOfItemsFromJson); // получаем данные со стима и отправляем парситься
@@ -519,6 +571,13 @@ void controller::setConnectionsOfMethods(){
     connect(this, &controller::countOfItemsIsObtained, this, &controller::compareCountOfItems); // сравниваем данные стима с БД
     connect(this, &controller::countOfItemsFromDB, this, &controller::compareCountOfItems); // сравниваем данные БД с данными стима
 
+    // ежедневная сборка данных
+    connect(this, &controller::dataIsPushedToPgSQL, this, &controller::checkTime); // проверяем время после каждого цикла
+    connect(this, &controller::dataOfItemIsPushedToPgSQL, this, &controller::checkTime); // проверяем время после каждого цикла
+    connect(this, &controller::timeInRange, this, &controller::collectDayData); // сборка и очистка данных после наступления времени
+    connect(this, &controller::dayDataInDbIsCollected, this, &controller::startCycleOfProgram); // продолжение цикла
+
+     // получаем недостающие данные
     connect(this, &controller::getMissingItems, [this](){
         connect(m_parser, &parser::sendCountOfPages, m_reader, &itemReader::cycleOfReadItems); // отправляем количество данных в цикл чтения
         connect(m_reader, &itemReader::readCatalogIsFinished, m_parser, &parser::readItemsFromJson); // отправляем пачку данных в парсер
@@ -532,13 +591,14 @@ void controller::setConnectionsOfMethods(){
         connect(m_parser, &parser::namesAndIdsIsReceived, this, &controller::addIdsToNewItems); // получаем id предметов
         connect(this, &controller::pushNewDataToPgSQL, this, &controller::pushToPgSQL); // отправляем данные в БД
         m_reader->getCountOfItemsJson();
-    }); // получаем недостающие данные
+    });
 
+    // получаем данные скина
     connect(this, &controller::continueReadItems, [this](){
         connect(this, &controller::listOfItemsFromDB, m_reader, &itemReader::cycleOfLoadingDataOfItem); // устанавливаем список названий предметов в контроллер
         connect(m_reader, &itemReader::sendJsonOfData, m_parser, &parser::parsDataOfItem); // отправляем json с данными в парсер
         connect(m_parser, &parser::dataOfItemIsReceived, m_reader, &itemReader::cycleOfLoadingDataOfItem); // получаем данные из БД
         connect(m_parser, &parser::gettingDataIsOvered, this, &controller::pushDataOfItemsToPgSQL); // отправляем данные в БД
         getListOfItemsFromDB();
-    }); // получаем данные скина
+    });
 }
