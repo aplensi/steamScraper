@@ -445,14 +445,13 @@ void controller::collectDayData(){
                                 "lastUpdate >= NOW() - INTERVAL '1 day' "
                             "GROUP BY "
                                 "id; "
-                            "DELETE FROM pricesofitems "
-                            "WHERE lastUpdate >= NOW() - INTERVAL '1 day'; "
+                            "TRUNCATE TABLE pricesofitems; "
                             "COMMIT;";
 
     PGresult* res = PQexec(conn, countSQL);
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error collect data:" << PQerrorMessage(conn);
     } else {
         emit dayDataInDbIsCollected();
     }
