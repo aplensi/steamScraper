@@ -408,10 +408,10 @@ void controller::fillUserInventory(int chatId, userInventory usInv) {
 void controller::checkTime(){
     QTime currentTime = QTime::currentTime();
     if (currentTime >= QTime(0, 0) && currentTime < QTime(1, 0) && m_checkInMidNight == false) {
-        m_checkInMidNight == true;
+        m_checkInMidNight = true;
         emit timeInRange();
     }else if(currentTime >= QTime(1, 0)){
-        m_checkInMidNight == false;
+        m_checkInMidNight = false;
         emit dayDataInDbIsCollected();
     }else{
         emit dayDataInDbIsCollected();
