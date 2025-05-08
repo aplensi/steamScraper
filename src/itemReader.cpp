@@ -10,14 +10,15 @@ void itemReader::getCountOfItemsJson()
     connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
+
         if(jsonDoc.isNull()) {
             getCountOfItemsJson();
         }else{
             emit getCountOfItemsIsFinished(jsonDoc);
         }
-        networkManager->deleteLater();
-        reply->deleteLater();
-        reply = nullptr;
     });
 }
 
@@ -40,14 +41,14 @@ void itemReader::readItems(int start)
     connect(networkManager, &QNetworkAccessManager::finished, [this, start, networkManager](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
         if(jsonDoc.isNull()) {
             readItems(start);
         }else{
             emit readCatalogIsFinished(jsonDoc);
         }
-        networkManager->deleteLater();
-        reply->deleteLater();
-        reply = nullptr;
     });
 }
 
@@ -69,14 +70,14 @@ void itemReader::readPageOfItem(QString nameOfItem)
     connect(networkManager, &QNetworkAccessManager::finished, [this, nameOfItem, networkManager, request](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QString responseString = QString::fromUtf8(responseData);
+        networkManager->deleteLater();
+        reply->deleteLater();
+        reply = nullptr;
         if(responseString.isEmpty()) {
             readPageOfItem(nameOfItem);
         }else{
             emit readPageOfItemIsFinished(responseString, nameOfItem);
         }
-        networkManager->deleteLater();
-        reply->deleteLater();
-        reply = nullptr;
     });
 }
 
