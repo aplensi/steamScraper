@@ -32,6 +32,7 @@ void telegramBot::setConnections(){
         connect(m_parser, &parser::brockenDataOfInventory, m_reader, &itemReader::getSteamInventory);
         connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerDontHaveItems);
         connect(m_parser, &parser::sendUserInventory, m_controll, &controller::fillUserInventory);
+        connect(m_controll, &controller::invOfUserIsFilled, m_controll, &controller::pushUserInventoryToDb);
         connect(m_controll, &controller::invOfUserIsFilled, this, &telegramBot::answerGetInventoryCommad);
         m_controll->getSteamIdOfUser(tgId);
     });

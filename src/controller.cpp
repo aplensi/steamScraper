@@ -24,7 +24,6 @@ void controller::connectToPgSQL(QString userName, QString passWord, QString addr
 
 void controller::pushToPgSQL(QVector<itemsOfPage> listOfItems)
 {
-
     if (!m_pgConnected || conn == nullptr) {
         qDebug() << "Database is not connected.";
         return;
@@ -299,6 +298,86 @@ void controller::createTableListOfBotUsers(){
     }
 
     PQclear(res);
+}
+
+void controller::createTableOfUsersItems(){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+    const char* createTableSQL =
+        "CREATE TABLE IF NOT EXISTS usersItems ("
+        "tgId INTEGER, "
+        "name VARCHAR(255),"
+        "count INTEGER);";
+    
+    PGresult* res = PQexec(conn, createTableSQL);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        qDebug() << "Error creating table:" << PQerrorMessage(conn);
+    } else {
+        qDebug() << "Users inventories table created successfully.";
+    }
+
+    PQclear(res);
+}
+
+void controller::pushUserInventoryToDb(int tgId, userInventory inventory){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    std::string tgIdStr = std::to_string(tgId);
+    const char* paramValues[1];
+    paramValues[0] = tgIdStr.c_str();
+    PGresult* res = PQexecParams(conn,
+                                  "DELETE FROM usersItems WHERE tgId = $1",
+                                  1,
+                                  NULL,
+                                  paramValues,
+                                  NULL,
+                                  NULL,
+                                  0); 
+    PQclear(res);
+
+    res = PQexec(conn, "COPY usersItems (tgId, name, count) FROM STDIN");
+    if (PQresultStatus(res) != PGRES_COPY_IN) {
+        qDebug() << "COPY command failed:" << PQerrorMessage(conn);
+        PQclear(res);
+        return;
+    }
+    PQclear(res);
+
+    for (const auto& item : inventory.m_listOfItems) {
+        QString line = QString("%1\t%2\t%3\n")
+                            .arg(tgId)
+                           .arg(item.m_name)
+                           .arg(item.m_count);
+        QByteArray utf8Line = line.toUtf8();
+        if (PQputCopyData(conn, utf8Line.constData(), utf8Line.size()) != 1) {
+            qDebug() << "Error sending data:" << PQerrorMessage(conn);
+            PQputCopyEnd(conn, "Error during COPY");
+            return;
+        }
+    }
+
+    if (PQputCopyEnd(conn, nullptr) != 1) {
+        qDebug() << "Error ending COPY:" << PQerrorMessage(conn);
+        return;
+    }
+
+    PGresult* copyRes;
+    while ((copyRes = PQgetResult(conn)) != nullptr) {
+        if (PQresultStatus(copyRes) != PGRES_COMMAND_OK) {
+            qDebug() << "COPY failed:" << PQerrorMessage(conn);
+            PQclear(copyRes);
+            return;
+        }
+        PQclear(copyRes);
+    }
+
+    qDebug() << "Inventory of user " << QString::number(tgId) << " pushed to PostgreSQL.";
 }
 
 void controller::getCountOfItemsInDB()

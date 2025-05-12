@@ -11,6 +11,7 @@ public:
     void createStableListOfData();
     void createTableListOfBotUsers();
     void createTableAveragePrice();
+    void createTableOfUsersItems();
     void getSteamIdOfUser(int tgId);
     void fillUserInventory(int chatId, userInventory usInv);
 
@@ -46,6 +47,7 @@ public slots:
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);
+    void pushUserInventoryToDb(int tgId, userInventory inventory);
     void pushDataOfItemsToPgSQL(QVector<item> listOfItems);
     void compareCountOfItems();
     void compareData();
