@@ -29,6 +29,8 @@ signals:
     void userIsNotRegistered(int tgId);
     void invOfUserIsFilled(int chatId, userInventory usInv);
     void setSteamIdOfUser(int chatId, QString steamId);
+    void sendUserInventory(int chatId, userInventory usInv);
+    void dontHaveSuchUser(int chatId);
     void pagesAreObtained();
     void dataIsPushedToPgSQL();
     void countOfItemsIsObtained();
@@ -44,6 +46,7 @@ signals:
     void dayDataInDbIsCollected();
 public slots:
     void checkTime();
+    void getInventoryOfUserFromDb(int chatId, QString steamId);
     void setListOfItems(QVector<itemsOfPage> listOfItems);
     void setCountOfItems(int count);
     void pushToPgSQL(QVector<itemsOfPage> listOfItems);

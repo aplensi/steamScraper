@@ -484,6 +484,42 @@ void controller::fillUserInventory(int chatId, userInventory usInv) {
     PQclear(res);
 }
 
+void controller::getInventoryOfUserFromDb(int chatId, QString steamId){
+    if (!m_pgConnected || conn == nullptr) {
+        qDebug() << "Database is not connected.";
+        return;
+    }
+
+    const char* countSQL = "usersitems.name, usersitems.count, sl.sellorderprice, sl.sellordercount"
+                            "FROM usersitems"
+                            "JOIN items itm ON itm.name = usersitems.name"
+                            "JOIN stablelist sl ON itm.id = sl.id"
+                            "WHERE tgid = $1;;";
+    const char* paramValues[1];
+    paramValues[0] = std::to_string(chatId).c_str();
+
+    userInventory usInv;
+    userItems usItm;
+    PGresult* res = PQexecParams(conn, countSQL, 1, nullptr, paramValues, nullptr, nullptr, 0);
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        qDebug() << "Error getting count of items:" << PQerrorMessage(conn);
+    } else {
+        if(PQgetvalue(res, 0, 0) != nullptr){
+            int numRows = PQntuples(res);
+            for (int i = 0; i < numRows; ++i) {
+                usItm.m_name = QString::fromUtf8(PQgetvalue(res, i, 0));
+                usItm.m_count = std::stoi(PQgetvalue(res, i, 1));
+                usItm.m_price = std::stod(PQgetvalue(res, i, 2));
+                usItm.m_countOfOffers = std::stoi(PQgetvalue(res, i, 3));
+                usInv.m_listOfItems.append(usItm);
+            }
+            emit sendUserInventory(chatId, usInv);
+        }else{
+            emit dontHaveSuchUser(chatId);
+        }
+    }
+}
+
 void controller::checkTime(){
     QTime currentTime = QTime::currentTime();
     if (currentTime >= QTime(0, 0) && currentTime < QTime(1, 0) && m_checkInMidNight == false) {
