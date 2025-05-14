@@ -17,10 +17,11 @@ void telegramBot::setConnections(){
     connect(m_parser, &parser::commandCommand, this, &telegramBot::answerCommandCommand);
 
     connect(m_parser, &parser::commandSetId, [this](int chatId, QString steamId){
-        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsAndCheckSteamId);
+        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsInventory);
+        connect(m_parser, &parser::sendUserInventory, m_controll, &controller::pushUserInventoryToDb);
         connect(m_parser, &parser::sendIdAndSteamId, m_controll, &controller::pushUserToDB);
         connect(m_parser, &parser::nullCountOfItemsInventory, this, &telegramBot::answerNullCountOfItemInventory);
-        connect(m_parser, &parser::brockenDataOfInventory, this, &telegramBot::answerBrockenId);
+        connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerBrockenId);
         connect(m_controll, &controller::userAdded, this, &telegramBot::answerSetIdCommand);
         m_reader->getSteamInventory(chatId, steamId);
     });

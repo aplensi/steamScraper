@@ -490,7 +490,7 @@ void controller::getInventoryOfUserFromDb(int chatId, QString steamId){
         return;
     }
 
-    const char* countSQL = "usersitems.name, usersitems.count, sl.sellorderprice, sl.sellordercount"
+    const char* countSQL = "SELECT usersitems.name, usersitems.count, sl.sellorderprice, sl.sellordercount"
                             "FROM usersitems"
                             "JOIN items itm ON itm.name = usersitems.name"
                             "JOIN stablelist sl ON itm.id = sl.id"

@@ -43,21 +43,6 @@ void parser::parsBotUpdate(QJsonDocument jsonDoc)
     }
 }
 
-void parser::parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDoc){
-    if(!jsonDoc.isNull()){
-        QJsonObject jsonObj = jsonDoc.object();
-        QJsonValue totalInventoryCountValue = jsonObj.value("total_inventory_count");
-        if(totalInventoryCountValue == 0){
-            emit nullCountOfItemsInventory(chatId, steamId);
-        }else{
-            qDebug() << "count of skins: " << totalInventoryCountValue;
-            emit sendIdAndSteamId(chatId, steamId);
-        }
-    }else{
-        emit brockenDataOfInventory(chatId, steamId);
-    }
-}
-
 void parser::parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc){
     userInventory inventory;
     userItems usItems;
@@ -95,6 +80,7 @@ void parser::parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc){
             }
             if(countOfSkins != 0){
                 emit sendUserInventory(chatId, inventory);
+                emit sendIdAndSteamId(chatId, steamId);
             }else{
                 emit dontHaveItems(chatId);
             }

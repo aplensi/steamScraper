@@ -41,7 +41,6 @@ public slots:
 
     void parsDataOfItem(QJsonDocument jsonDoc, int id);         // tgBot
     void parsBotUpdate(QJsonDocument jsonDoc);
-    void parsAndCheckSteamId(int chatId, QString steamId, QJsonDocument jsonDoc);
     void parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc);
 
 signals:
