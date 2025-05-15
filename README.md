@@ -15,3 +15,5 @@ Also, for this to work, you need to download and run: [Tor](https://community.to
 (This is necessary in order to change IP addresses every second.)  
 
 If you use it on VDS, you need to install Xvfb
+
+Working version of the bot: @RustSteamHelperBot
