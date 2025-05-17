@@ -55,7 +55,7 @@ signals:
     void commandGetPrice(int tgId);
     void commandShowInvetory(int tgId, QString steamId);
     void sendUserInventory(int tgId, userInventory usInv);
-    void dontHaveItems(int tgId);
+    void dontHaveItems(int tgId, QString steamId);
 
     void sendCountOfPages(int count);                           // itemReader
     void countOfItemsIsNull();

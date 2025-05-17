@@ -82,7 +82,7 @@ void parser::parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc){
                 emit sendUserInventory(chatId, inventory);
                 emit sendIdAndSteamId(chatId, steamId);
             }else{
-                emit dontHaveItems(chatId);
+                emit dontHaveItems(chatId, steamId);
             }
         }
     }else{
