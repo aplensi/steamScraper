@@ -28,14 +28,9 @@ void telegramBot::setConnections(){
     });
 
     connect(m_parser, &parser::commandGetPrice, [this](int tgId){
-        connect(m_controll, &controller::setSteamIdOfUser, m_reader, &itemReader::getSteamInventory);
+        connect(m_controll, &controller::setSteamIdOfUser, m_controll, &controller::getInventoryOfUserFromDb);
         connect(m_controll, &controller::userIsNotRegistered, this, &telegramBot::answerUserIsNotRegistered);
-        connect(m_reader, &itemReader::sendResultOfSteamInventory, m_parser, &parser::parsInventory);
-        connect(m_parser, &parser::brockenDataOfInventory, m_reader, &itemReader::getSteamInventory);
-        connect(m_parser, &parser::dontHaveItems, this, &telegramBot::answerDontHaveItems);
-        connect(m_parser, &parser::sendUserInventory, m_controll, &controller::fillUserInventory);
-        connect(m_controll, &controller::invOfUserIsFilled, m_controll, &controller::pushUserInventoryToDb);
-        connect(m_controll, &controller::invOfUserIsFilled, this, &telegramBot::answerGetInventoryCommad);
+        connect(m_controll, &controller::sendUserInventory, this, &telegramBot::answerGetInventoryCommad);
         m_controll->getSteamIdOfUser(tgId);
     });
 
