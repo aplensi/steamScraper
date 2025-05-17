@@ -490,10 +490,10 @@ void controller::getInventoryOfUserFromDb(int chatId, QString steamId){
         return;
     }
 
-    const char* countSQL = "SELECT usersitems.name, usersitems.count, sl.sellorderprice, sl.sellordercount"
-                            "FROM usersitems"
-                            "JOIN items itm ON itm.name = usersitems.name"
-                            "JOIN stablelist sl ON itm.id = sl.id"
+    const char* countSQL = "SELECT usersitems.name, usersitems.count, sl.sellorderprice, sl.sellordercount "
+                            "FROM usersitems "
+                            "JOIN items itm ON itm.name = usersitems.name "
+                            "JOIN stablelist sl ON itm.id = sl.id "
                             "WHERE tgid = $1;;";
     const char* paramValues[1];
     paramValues[0] = std::to_string(chatId).c_str();
