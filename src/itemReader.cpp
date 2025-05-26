@@ -2,7 +2,7 @@
 
 void itemReader::getCountOfItemsJson()
 {
-    QUrl url("https://steamcommunity.com/market/search/render/?query=&norender=1&appid=252490");
+    QUrl url("https://steamcommunity.com/market/search/render/?query=&start=0&count=0&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
     startProxy(networkManager);
