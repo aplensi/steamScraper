@@ -657,9 +657,21 @@ void controller::getDataFromDB()
 }
 
 void controller::cycleOfProgram(){
-    m_reader = new itemReader();
-    m_parser = new parser();
-    startCycleOfProgram();
+    QThread* thread = new QThread(this);
+    itemReader* reader = new itemReader();
+    parser* parserObj = new parser();
+
+    reader->moveToThread(thread);
+    parserObj->moveToThread(thread);
+
+    connect(thread, &QThread::started, this, [this, reader, parserObj]() {
+        m_reader = reader;
+        m_parser = parserObj;
+        startCycleOfProgram();
+    });
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+    thread->start();
 }
 
 void controller::startCycleOfProgram()
