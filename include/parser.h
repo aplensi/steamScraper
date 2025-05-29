@@ -58,6 +58,7 @@ signals:
     void dontHaveItems(int tgId, QString steamId);
 
     void sendCountOfPages(int count);                           // itemReader
+    void startNewPack(int start, int count);
     void countOfItemsIsNull();
     void brockenRequest(int start);
     void brockenPageOfItem(QString name);

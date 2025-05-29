@@ -128,6 +128,16 @@ void parser::readItemsFromJson(QJsonDocument jsonDoc)
         if(m_countOfItems == m_listOfItems.length()){
             qDebug() << "All items are parsed.";
             emit namesIsFilled(m_listOfItems);   
+        }else if(m_listOfItems.length() % 500 == 0){
+            qDebug() << "started new pack";
+            start = m_countOfItems - (m_countOfItems - m_listOfItems.length());
+            if (m_countOfItems - start > 500){
+                emit startNewPack(start, 50);
+            }else {
+                int count = (m_countOfItems - start + 9) / 10;
+                qDebug() << "Count of items less then 500" << "\nstart: " << start << " count: " << count;
+                emit startNewPack(start, count);
+            }
         }
     }
 }
@@ -187,9 +197,6 @@ void parser::parsDataOfItem(QJsonDocument jsonDoc, int id)
     m_item.m_countOfPurchase = jsonObj.value("buy_order_count").toString().remove(',').toInt();
     m_item.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').remove(",").toDouble();
     m_listOfDataOfItem.append(m_item);
-
-    // qDebug() << "ID: " << m_item.m_id << " || Sale price: " << m_item.m_salePrice << " || Purchase price: " << m_item.m_purchasePrice;
-    // qDebug() << "Count of sale: " << m_item.m_countOfSale << " || Count of purchase: " << m_item.m_countOfPurchase << "\n";
 
     if(m_listOfDataOfItem.length() == m_countOfItemsDB){
         qDebug() << "All items are parsed.";

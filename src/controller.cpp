@@ -706,9 +706,10 @@ void controller::setConnectionsOfMethods(){
      // получаем недостающие данные
     connect(this, &controller::getMissingItems, [this](){
         disconnect(m_parser, &parser::sendCountOfPages, nullptr, nullptr);
-        connect(m_parser, &parser::sendCountOfPages, m_reader, &itemReader::cycleOfReadItems); // отправляем количество данных в цикл чтения
+        connect(m_parser, &parser::sendCountOfPages, m_reader, &itemReader::startPackOfReadItems); // запускаем цикл получения n элементов
         connect(m_reader, &itemReader::readCatalogIsFinished, m_parser, &parser::readItemsFromJson); // отправляем пачку данных в парсер
         connect(m_parser, &parser::brockenRequest, m_reader, &itemReader::readItems); // в случае ошибки повторяем запрос
+        connect(m_parser, &parser::startNewPack, m_reader, &itemReader::cycleOfReadItems); // получаем n количество элементов
         connect(m_parser, &parser::namesIsFilled, this, &controller::setListOfItems); // устанавливаем список названий предметов в контроллер
         connect(this, &controller::listOfItemsIsObtained, this, &controller::compareData); // сравниваем данные стима с БД
         connect(this, &controller::dataIsCompared, m_reader, &itemReader::cycleOfReadPages); // отправляем заполненный список названий в цикл получения id предмета и читаем по пачкам

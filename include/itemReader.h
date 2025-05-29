@@ -9,7 +9,8 @@ class itemReader : public QObject{
 public:
     void getSteamInventory(int chatId, QString steamId);
     void getCountOfItemsJson();
-    void cycleOfReadItems(int countOfItems);
+    void startPackOfReadItems (int count);
+    void cycleOfReadItems(int start, int count);
     void cycleOfReadPages(QVector<itemsOfPage> listOfItems);
     void cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems);
 signals:

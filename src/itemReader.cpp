@@ -22,34 +22,53 @@ void itemReader::getCountOfItemsJson()
     });
 }
 
-void itemReader::cycleOfReadItems(int countOfItems)
+void itemReader::startPackOfReadItems(int count){
+    cycleOfReadItems(0, 50);
+}
+
+void itemReader::cycleOfReadItems(int start, int count)
 {
-    int i = 0;
-    while(i < countOfItems){
+    int step = 10;
+    int i = start;
+    while(i < start + count * step){
         readItems(i);
-        i += 100;
+        i += step;
     }
 }
 
 void itemReader::readItems(int start)
 {
-    QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=100&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
+    QUrl url("https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(start) + "&count=10&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490");
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    QTimer* timer = new QTimer(this);
     startProxy(networkManager);
     networkManager->get(request);
-    connect(networkManager, &QNetworkAccessManager::finished, [this, start, networkManager](QNetworkReply* reply) {
+    connect(timer, &QTimer::timeout, [this, start, networkManager, timer]() {
+        disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
+        networkManager->deleteLater();
+        timer->stop();
+        timer->deleteLater();
+        disconnect(networkManager, nullptr, nullptr, nullptr);
+        readItems(start);
+    });
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, start, timer](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+        disconnect(timer, nullptr, nullptr, nullptr);
         networkManager->deleteLater();
         reply->deleteLater();
+        timer->deleteLater();
         reply = nullptr;
+
         if(jsonDoc.isNull()) {
             readItems(start);
         }else{
             emit readCatalogIsFinished(jsonDoc);
         }
     });
+    timer->start(2000);
+
 }
 
 void itemReader::cycleOfReadPages(QVector<itemsOfPage> listOfItems)
@@ -119,7 +138,7 @@ void itemReader::loadDataOfItem(int id)
             emit sendJsonOfData(jsonDoc, id);
         }
     });
-    timer->start(10000);
+    timer->start(2000);
 }
 
 void itemReader::getSteamInventory(int chatId, QString steamId){
