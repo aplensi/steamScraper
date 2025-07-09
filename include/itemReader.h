@@ -7,26 +7,24 @@
 class itemReader : public QObject{
     Q_OBJECT
 public:
-    void getSteamInventory(int chatId, QString steamId);
-    void getCountOfItemsJson();
-    void startPackOfReadItems (int count);
-    void cycleOfReadItems(int start, int count);
-    void cycleOfReadPages(QVector<itemsOfPage> listOfItems);
-    void cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems);
+    void getSteamInventory(int chatId, QString steamId);                // получает данные инвентаря (стандартная структура QNetworkAccessManager)
+    void getCountOfItemsJson();                                         // получает данные ТП (стандартная структура QNetworkAccessManager)
+    void startPackOfReadItems (int count);                              // метод который запускает цикл, который запускает readItems
+    void cycleOfReadItems(int start, int count);                        // цикл который запускается startPackOfReadItems для того чтобы запустить readItems
+    void cycleOfReadPages(QVector<itemsOfPage> listOfItems);            // цикл который запускает readItems
+    void cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems);    // цикл который запускает loadDataOfItem
 signals:
-    void getCountOfItemsIsFinished(QJsonDocument jsonDoc);
-    void readCatalogIsFinished(QJsonDocument jsonDoc);
-    void readItemIsFinished();
-    void readPageOfItemIsFinished(QString html, QString nameOfItem);
-    void sendJsonOfData(QJsonDocument jsonDoc, int id);
-    void sendResultOfSteamInventory(int chatId, QString steamId, QJsonDocument result);
+    void getCountOfItemsIsFinished(QJsonDocument jsonDoc);              // сигнал: успех getCountOfItemsJson
+    void readCatalogIsFinished(QJsonDocument jsonDoc);                  // сигнал: успех readItems
+    void readPageOfItemIsFinished(QString html, QString nameOfItem);    // сигнал: успех readPageOfItem
+    void sendJsonOfData(QJsonDocument jsonDoc, int id);                 // сигнал: успех loadDataOfItem 
+    void sendResultOfSteamInventory(int chatId, QString steamId, QJsonDocument result); // сигнал: успех getSteamInventory
 public slots:
-    void readItems(int start);
-    void readPageOfItem(QString nameOfItem);
-    void loadDataOfItem(int id);
+    void readItems(int start);                                          // получение списка предметов ТП (стандартная структура QNetworkAccessManager)
+    void readPageOfItem(QString nameOfItem);                            // получает endPoint со страницы предмета (стандартная структура QNetworkAccessManager)
+    void loadDataOfItem(int id);                                        // получает торговые данные предмета (стандартная структура QNetworkAccessManager)
 private:
-    void startProxy(QNetworkAccessManager *manager);
+    void startProxy(QNetworkAccessManager *manager);                    // соединяет QNetworkAccessManager с прокси
 };
-
 
 #endif
