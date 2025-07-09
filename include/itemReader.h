@@ -27,4 +27,39 @@ private:
     void startProxy(QNetworkAccessManager *manager);                    // соединяет QNetworkAccessManager с прокси
 };
 
+class dataRecipient : public QObject{
+    Q_OBJECT
+public:
+    void setData(QString url);
+    QByteArray getData();
+private:
+    QByteArray m_responseData;
+};
+
+class textData : public QObject{
+    Q_OBJECT
+public:
+    virtual void shapeData(QByteArray responseData) = 0;
+};
+
+class jsonData : textData{
+public:
+    void shapeData(QByteArray responseData) override;
+};
+
+class cycleStarter{
+public:
+    void setUrl(QString url);
+    void setStep(int count);
+    void startCycle();
+private:
+    int m_step = 0;
+    QString m_url = "";
+};
+
+class proxyStarter{
+public:
+    proxyStarter(QNetworkAccessManager *manager);
+};
+
 #endif
