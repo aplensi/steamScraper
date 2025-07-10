@@ -162,3 +162,72 @@ void itemReader::startProxy(QNetworkAccessManager *manager)
     QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 9050);
     manager->setProxy(proxy);
 }
+
+//==============================================================================================================================
+
+void dataRecipient::setData(QString UrlAdderess){
+    QUrl url(UrlAdderess);
+    QNetworkRequest request(url);
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+    QTimer* timer = new QTimer(this);
+    proxyStarter::start(networkManager);
+    networkManager->get(request);
+    connect(timer, &QTimer::timeout, [this, UrlAdderess, networkManager, timer]() {
+        disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
+        networkManager->deleteLater();
+        timer->stop();
+        timer->deleteLater();
+        disconnect(networkManager, nullptr, nullptr, nullptr);
+        setData(UrlAdderess);
+    });
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, UrlAdderess, timer](QNetworkReply* reply) {
+        QByteArray responseData = reply->readAll();
+        disconnect(timer, nullptr, nullptr, nullptr);
+        networkManager->deleteLater();
+        reply->deleteLater();
+        timer->deleteLater();
+        reply = nullptr;
+
+        if(responseData == "") { 
+            setData(UrlAdderess);
+        }else{
+            emit dataAreReceived(responseData);
+        }
+    });
+    timer->start(2000);
+}
+
+void textData::shapeData(QByteArray responseData){
+    emit dataIsShaped(QString::fromUtf8(responseData));
+}
+
+void jsonData::shapeData(QByteArray responseData){
+    emit dataIsShaped(QJsonDocument::fromJson(responseData));
+}
+
+void setParametersReceiverCycle::setStep(int step){
+    if(step <= 0){
+        std::cout << "\nThe step is specified incorrectly!" << std::endl;
+        return;
+    }else{
+        m_cycleData->m_step = step;
+    }
+}
+
+void setParametersReceiverCycle::setUrl(QString url){
+    m_cycleData->m_url = url;
+}
+
+void setParametersReceiverCycle::setListOfUrls(QVector<QString> listOfUrls){
+    if(listOfUrls.empty()){
+        std::cout << "\nList is empty!" << std::endl;
+        return;
+    }else{
+        m_cycleData->m_listOfUrls = listOfUrls;
+    }
+}
+
+void proxyStarter::start(QNetworkAccessManager *manager){
+    QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 9050);
+    manager->setProxy(proxy);
+}
