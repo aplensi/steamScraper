@@ -32,6 +32,8 @@ class dataRecipient : public QObject{
 public:
     void setData(QString url);
     QByteArray getData();
+signals:
+    void dataAreReceived(QByteArray data);
 private:
     QByteArray m_responseData;
 };
@@ -39,7 +41,9 @@ private:
 class textData : public QObject{
     Q_OBJECT
 public:
-    virtual void shapeData(QByteArray responseData) = 0;
+    virtual void shapeData(QByteArray responseData);
+signals:
+    void dataIsShaped(auto data);
 };
 
 class jsonData : textData{
@@ -47,19 +51,33 @@ public:
     void shapeData(QByteArray responseData) override;
 };
 
-class cycleStarter{
-public:
-    void setUrl(QString url);
-    void setStep(int count);
-    void startCycle();
-private:
+struct receiverCycle{
     int m_step = 0;
     QString m_url = "";
+    QVector<QString> m_listOfUrls;
+};
+
+class setParametersReceiverCycle{
+public:
+    setParametersReceiverCycle(receiverCycle* cycleData) : m_cycleData(cycleData){};
+    void setUrl(QString url);
+    void setStep(int count);
+    void setListOfUrls(QVector<QString> urlList);
+private:
+    receiverCycle* m_cycleData;
+};
+
+class cycleStarter : public receiverCycle{
+public:
+    cycleStarter(receiverCycle* cycleData) : m_cycleData(cycleData){};
+    void startCycle();
+private:
+    receiverCycle* m_cycleData;
 };
 
 class proxyStarter{
 public:
-    proxyStarter(QNetworkAccessManager *manager);
+    static void start(QNetworkAccessManager *manager);
 };
 
 #endif
