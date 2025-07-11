@@ -42,37 +42,55 @@ class textData : public QObject{
     Q_OBJECT
 public:
     virtual void shapeData(QByteArray responseData);
+    virtual void shapeData(QVector<QByteArray> responseData);
 signals:
-    void dataIsShaped(auto data);
+    void dataAreShaped(auto data);
 };
 
 class jsonData : textData{
 public:
     void shapeData(QByteArray responseData) override;
+    virtual void shapeData(QVector<QByteArray> responseData) override;
 };
 
 struct receiverCycle{
-    int m_step = 0;
-    QString m_url = "";
+    int m_threads = 0;
     QVector<QString> m_listOfUrls;
+    QVector<QByteArray> m_listOfReceivedData;
 };
 
 class setParametersReceiverCycle{
 public:
     setParametersReceiverCycle(receiverCycle* cycleData) : m_cycleData(cycleData){};
-    void setUrl(QString url);
     void setStep(int count);
     void setListOfUrls(QVector<QString> urlList);
 private:
     receiverCycle* m_cycleData;
 };
 
-class cycleStarter : public receiverCycle{
+class cycleStarter{
 public:
     cycleStarter(receiverCycle* cycleData) : m_cycleData(cycleData){};
-    void startCycle();
+    void start();
+signals:
+    void dataAreReceived();
 private:
     receiverCycle* m_cycleData;
+};
+
+class executor : public QObject{
+    Q_OBJECT
+public:
+    executor(QVector<QString> listOfUrls, receiverCycle* cycleData) : m_listOfUrls(listOfUrls), m_cycleData(cycleData){};
+    static void start();
+    void start(int position);
+signals: 
+    void someDataAreReceived(QVector<QByteArray> listOfReceivedData);
+    void allDataAreReceived();
+private:
+    int m_currentPosition = 0;
+    receiverCycle* m_cycleData;
+    QVector<QString> m_listOfUrls;
 };
 
 class proxyStarter{
