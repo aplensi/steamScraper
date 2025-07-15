@@ -239,11 +239,33 @@ void setParametersReceiverCycle::setListOfUrls(QVector<QString> listOfUrls){
     }
 }
 
+cycleStarter::~cycleStarter(){
+    delete m_cycleData;
+    delete m_exe;
+}
+
+void cycleStarter::checkData(){
+    if(m_cycleData->m_listOfReceivedData.length() == m_cycleData->m_listOfUrls.length()){
+        emit dataAreReceived();
+    }
+}
+
 void cycleStarter::start(){
+    connect(m_exe, &executor::dataAreReceived, this, &cycleStarter::checkData);
     if(m_cycleData->m_listOfUrls.isEmpty() && m_cycleData->m_threads <= 1){
         std::cout << "\nData not specified!" << std::endl;
     }else{
-
+        int step = (m_cycleData->m_listOfUrls.length() - 1 + m_cycleData->m_threads) / m_cycleData->m_threads;
+        QVector<QString> listOfUrls;
+        for(int i = 0; i < m_cycleData->m_listOfUrls.length(); i++){
+            if(i + 1 % step == 0){
+                m_exe = new executor(listOfUrls, m_cycleData);
+                listOfUrls.clear();
+                m_exe->start();
+            }else{
+                listOfUrls.append(m_cycleData->m_listOfUrls[i]);
+            }
+        }
     }
 }
 

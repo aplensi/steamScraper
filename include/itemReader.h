@@ -68,14 +68,18 @@ private:
     receiverData* m_cycleData;
 };
 
-class cycleStarter{
+class cycleStarter : public QObject{
+    Q_OBJECT
 public:
     cycleStarter(receiverData* cycleData) : m_cycleData(cycleData){};
+    ~cycleStarter();
     void start();
 signals:
     void dataAreReceived();
 private:
+    void checkData();
     receiverData* m_cycleData;
+    executor* m_exe;
 };
 
 class executor : public QObject{
@@ -83,7 +87,6 @@ class executor : public QObject{
 public:
     executor(QVector<QString> listOfUrls, receiverData* cycleData) : m_listOfUrls(listOfUrls), m_cycleData(cycleData){};
     void start();
-    void start(int position);
 signals: 
     void dataAreReceived();
 private:
