@@ -198,32 +198,52 @@ void dataRecipient::setData(QString UrlAdderess){
 }
 
 void textData::shapeData(QByteArray responseData){
-    emit dataIsShaped(QString::fromUtf8(responseData));
+    emit dataAreShaped(QString::fromUtf8(responseData));
+}
+
+void textData::shapeData(QVector<QByteArray> responseList){
+    QVector<QString> newData;
+    for(const auto &i : responseList){
+        newData.append(QString::fromUtf8(i));
+    }
+    emit dataAreShaped(newData);
 }
 
 void jsonData::shapeData(QByteArray responseData){
-    emit dataIsShaped(QJsonDocument::fromJson(responseData));
+    emit dataAreShaped(QJsonDocument::fromJson(responseData));
+}
+
+void jsonData::shapeData(QVector<QByteArray> responseList){
+    QVector<QJsonDocument> newData;
+    for(const auto &i : responseList){
+        newData.append(QJsonDocument::fromJson(i));
+    }
+    emit dataAreShaped(newData);
 }
 
 void setParametersReceiverCycle::setStep(int step){
-    if(step <= 0){
+    if(step <= 1){
         std::cout << "\nThe step is specified incorrectly!" << std::endl;
         return;
     }else{
-        m_cycleData->m_step = step;
+        m_cycleData->m_threads = step;
     }
 }
 
-void setParametersReceiverCycle::setUrl(QString url){
-    m_cycleData->m_url = url;
-}
-
 void setParametersReceiverCycle::setListOfUrls(QVector<QString> listOfUrls){
-    if(listOfUrls.empty()){
+    if(listOfUrls.isEmpty()){
         std::cout << "\nList is empty!" << std::endl;
         return;
     }else{
         m_cycleData->m_listOfUrls = listOfUrls;
+    }
+}
+
+void cycleStarter::start(){
+    if(m_cycleData->m_listOfUrls.isEmpty() && m_cycleData->m_threads <= 1){
+        std::cout << "\nData not specified!" << std::endl;
+    }else{
+
     }
 }
 
