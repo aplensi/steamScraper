@@ -247,6 +247,21 @@ void cycleStarter::start(){
     }
 }
 
+void executor::start(){
+    connect(m_recipData, &dataRecipient::dataAreReceived, this, &executor::startNewIteration);
+    m_recipData->setData(m_listOfUrls[m_currentPosition]);
+}
+
+void executor::startNewIteration(QByteArray data){
+    m_cycleData->m_listOfReceivedData.append(data);
+    m_currentPosition++;
+    if(m_currentPosition < m_listOfUrls.length()){
+        m_recipData->setData(m_listOfUrls[m_currentPosition]);
+    }else{
+        emit dataAreReceived();
+    }
+}
+
 void proxyStarter::start(QNetworkAccessManager *manager){
     QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 9050);
     manager->setProxy(proxy);
