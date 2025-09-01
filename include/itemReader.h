@@ -38,21 +38,6 @@ private:
     QByteArray m_responseData;
 };
 
-class textData : public QObject{
-    Q_OBJECT
-public:
-    virtual void shapeData(QByteArray responseData);
-    virtual void shapeData(QVector<QByteArray> responseData);
-signals:
-    void dataAreShaped(auto data);
-};
-
-class jsonData : textData{
-public:
-    void shapeData(QByteArray responseData) override;
-    virtual void shapeData(QVector<QByteArray> responseData) override;
-};
-
 struct receiverData{
     int m_threads = 0;
     QVector<QString> m_listOfUrls;
@@ -68,20 +53,6 @@ private:
     receiverData* m_cycleData;
 };
 
-class cycleStarter : public QObject{
-    Q_OBJECT
-public:
-    cycleStarter(receiverData* cycleData) : m_cycleData(cycleData){};
-    ~cycleStarter();
-    void start();
-signals:
-    void dataAreReceived();
-private:
-    void checkData();
-    receiverData* m_cycleData;
-    executor* m_exe;
-};
-
 class executor : public QObject{
     Q_OBJECT
 public:
@@ -95,6 +66,20 @@ private:
     receiverData* m_cycleData;
     QVector<QString> m_listOfUrls;
     dataRecipient* m_recipData;
+};
+
+class cycleStarter : public QObject{
+    Q_OBJECT
+public:
+    cycleStarter(receiverData* cycleData) : m_cycleData(cycleData){};
+    ~cycleStarter();
+    void start();
+signals:
+    void dataAreReceived();
+private:
+    void checkData();
+    receiverData* m_cycleData;
+    executor* m_exe;
 };
 
 class proxyStarter{

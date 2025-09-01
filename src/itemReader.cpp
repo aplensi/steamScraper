@@ -197,30 +197,6 @@ void dataRecipient::setData(QString UrlAdderess){
     timer->start(2000);
 }
 
-void textData::shapeData(QByteArray responseData){
-    emit dataAreShaped(QString::fromUtf8(responseData));
-}
-
-void textData::shapeData(QVector<QByteArray> responseList){
-    QVector<QString> newData;
-    for(const auto &i : responseList){
-        newData.append(QString::fromUtf8(i));
-    }
-    emit dataAreShaped(newData);
-}
-
-void jsonData::shapeData(QByteArray responseData){
-    emit dataAreShaped(QJsonDocument::fromJson(responseData));
-}
-
-void jsonData::shapeData(QVector<QByteArray> responseList){
-    QVector<QJsonDocument> newData;
-    for(const auto &i : responseList){
-        newData.append(QJsonDocument::fromJson(i));
-    }
-    emit dataAreShaped(newData);
-}
-
 void setParametersReceiverCycle::setStep(int step){
     if(step <= 1){
         std::cout << "\nThe step is specified incorrectly!" << std::endl;
