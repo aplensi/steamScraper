@@ -235,6 +235,14 @@ void parser::parsPageOfMarketPlace(QString line)
     }
 }
 
+void parsJson::convertData(QVector<QByteArray> data){
+    QVector<QJsonObject> dataList;
+    for(int i; i < data.length(); i++){
+        dataList.append(QJsonDocument::fromJson(data[i]).object());
+    }
+    emit dataAreConverted(dataList);
+}
+
 QString urlCreator::fromIdToMarketPriceUrl(int id){
     return "https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1";
 }
