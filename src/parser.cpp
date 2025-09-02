@@ -234,3 +234,19 @@ void parser::parsPageOfMarketPlace(QString line)
         qDebug() << "Item name:" << match.captured(1);
     }
 }
+
+QString urlCreator::fromIdToMarketPriceUrl(int id){
+    return "https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1";
+}
+
+QString urlCreator::fromNumberOfPageToPageOfTPUrl(int nuber){
+    return "https://steamcommunity.com/market/search/render/?query=&start=" + QString::number(nuber) + "&count=10&search_descriptions=0&sort_column=name&sort_dir=asc&norender=1&appid=252490";
+}
+
+QString urlCreator::fromNameOfItemToPageOfItemsUrl(QString name){
+    return "https://steamcommunity.com/market/listings/252490/" + name;
+}
+
+QString urlCreator::fromSteamIdToUserInventoryUrl(QString id){
+    return "https://steamcommunity.com/inventory/" + id + "/252490/2?l=english&norender=1";
+}

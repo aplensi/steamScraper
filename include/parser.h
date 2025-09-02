@@ -83,4 +83,12 @@ private:
     QVector<itemsOfPage> m_listOfItemsDB;
 };
 
+class urlCreator{
+public:
+    static QString fromIdToMarketPriceUrl(int id); 
+    static QString fromSteamIdToUserInventoryUrl(QString steamId);
+    static QString fromNameOfItemToPageOfItemsUrl(QString nameOfItem);
+    static QString fromNumberOfPageToPageOfTPUrl(int number);
+};
+
 #endif
