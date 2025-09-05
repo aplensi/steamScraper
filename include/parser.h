@@ -29,28 +29,6 @@ struct userInventory{
     float m_commonPrice;
 };
 
-class parsAnswer : QObject{
-    Q_OBJECT
-public:
-    virtual void convertData(QVector<QByteArray> data) = 0;
-};
-
-class parsJson : parsAnswer{
-public:
-    void convertData(QVector<QByteArray> data) override;
-signals:
-    void dataAreConverted(QVector<QJsonObject> data);
-private:
-    QVector<item> m_items;
-};
-
-class parsText : parsAnswer{
-public:
-    void convertData(QVector<QByteArray> data) override;
-signals:
-void dataAreConverted(QVector<QString> data);
-};
-
 class parser: public QObject{
     Q_OBJECT
 public slots:
@@ -103,6 +81,26 @@ private:
     QVector<item> m_listOfDataOfItem;
     QVector<itemsOfPage> m_listOfItems;
     QVector<itemsOfPage> m_listOfItemsDB;
+};
+
+//================================================================================
+
+class parsJson{
+public:
+    QVector<QJsonObject> convertData(QVector<QByteArray> data);
+};
+
+class parsText{
+public:
+    QVector<QString> convertData(QVector<QByteArray> data);
+};
+
+class extractItemData{
+public:
+    QVector<item> extract(QVector<QJsonObject> jsonDoc);
+private:
+    QVector<item> m_vectorOfItems; 
+    item m_item;
 };
 
 class urlCreator{

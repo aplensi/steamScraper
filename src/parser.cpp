@@ -235,12 +235,25 @@ void parser::parsPageOfMarketPlace(QString line)
     }
 }
 
-void parsJson::convertData(QVector<QByteArray> data){
+//===================================================================================================
+
+QVector<item> extractItemData::extract(QVector<QJsonObject> data){
+    for(const auto &jsonObj : data){
+        m_item.m_countOfSale = jsonObj.value("sell_order_count").toString().remove(',').toInt();
+        m_item.m_salePrice = jsonObj.value("sell_order_price").toString().remove('$').remove(",").toDouble();
+        m_item.m_countOfPurchase = jsonObj.value("buy_order_count").toString().remove(',').toInt();
+        m_item.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').remove(",").toDouble();
+        m_vectorOfItems.append(m_item);
+    }
+    return m_vectorOfItems;
+}
+
+QVector<QJsonObject> parsJson::convertData(QVector<QByteArray> data){
     QVector<QJsonObject> dataList;
     for(int i; i < data.length(); i++){
         dataList.append(QJsonDocument::fromJson(data[i]).object());
     }
-    emit dataAreConverted(dataList);
+    return dataList;
 }
 
 QString urlCreator::fromIdToMarketPriceUrl(int id){
