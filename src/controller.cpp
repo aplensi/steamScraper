@@ -730,3 +730,25 @@ void controller::setConnectionsOfMethods(){
         getListOfItemsFromDB();
     });
 }
+
+QVector<QString> createUrlVector::get(){
+    return vectorOfUrls;
+}
+
+void createUrlVector::clearVector(){
+    vectorOfUrls.clear();
+}
+
+int createUrlVector::length(){
+    return vectorOfUrls.length();
+}
+
+void createUrlsOfItemPage::add(QVector<QString> data){
+    for(const auto &i : data){
+        vectorOfUrls.append(urlCreator::fromNameOfItemToPageOfItemsUrl(i));
+    }
+}
+
+void createUrlsOfItemPage::add(QString data){
+    vectorOfUrls.append(urlCreator::fromNameOfItemToPageOfItemsUrl(data));
+}

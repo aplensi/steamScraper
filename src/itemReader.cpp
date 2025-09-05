@@ -165,22 +165,22 @@ void itemReader::startProxy(QNetworkAccessManager *manager)
 
 //==============================================================================================================================
 
-void dataRecipient::setData(QString UrlAdderess){
-    QUrl url(UrlAdderess);
+void dataRecipient::setData(QString UrlAddress){
+    QUrl url(UrlAddress);
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
     QTimer* timer = new QTimer(this);
     proxyStarter::start(networkManager);
     networkManager->get(request);
-    connect(timer, &QTimer::timeout, [this, UrlAdderess, networkManager, timer]() {
+    connect(timer, &QTimer::timeout, [this, UrlAddress, networkManager, timer]() {
         disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
         networkManager->deleteLater();
         timer->stop();
         timer->deleteLater();
         disconnect(networkManager, nullptr, nullptr, nullptr);
-        setData(UrlAdderess);
+        setData(UrlAddress);
     });
-    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, UrlAdderess, timer](QNetworkReply* reply) {
+    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, UrlAddress, timer](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
         disconnect(timer, nullptr, nullptr, nullptr);
         networkManager->deleteLater();
@@ -189,7 +189,7 @@ void dataRecipient::setData(QString UrlAdderess){
         reply = nullptr;
 
         if(responseData == "") { 
-            setData(UrlAdderess);
+            setData(UrlAddress);
         }else{
             emit dataAreReceived(responseData);
         }

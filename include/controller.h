@@ -76,4 +76,30 @@ private:
     PGconn* connToUserBd = nullptr;
 };
 
+class createUrlVector{
+public:
+    virtual void add(QString data) = 0;
+    virtual void add(QVector<QString> data) = 0;
+    virtual void add(int data) = 0;
+    virtual void add(QVector<int> data) = 0;
+    QVector<QString> get();
+    void clearVector();
+    int length();
+private:
+    QVector<QString> vectorOfUrls;
+};
+
+class createUrlsOfItemPage : createUrlVector{
+public:
+    void add(QVector<QString> data) override;
+    void add(QString data) override;
+private:
+    QVector<QString> vectorOfUrls;
+};
+
+class loadCurrentDataOfItems{
+public:
+    void start(QVector<itemsOfPage>);
+};
+
 #endif
