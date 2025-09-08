@@ -75,9 +75,11 @@ public:
     ~cycleStarter();
     void start();
 signals:
-    void dataAreReceived();
+    void dataAreReceived(QVector<QByteArray> data);
 private:
     void checkData();
+    bool inProgress;
+    bool connectIsCreated;
     receiverData* m_cycleData;
     executor* m_exe;
 };
