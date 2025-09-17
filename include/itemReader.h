@@ -42,6 +42,7 @@ struct receiverData{
     int m_threads = 0;
     QVector<QString> m_listOfUrls;
     QVector<QByteArray> m_listOfReceivedData;
+    QMutex listMutex;
 };
 
 class setParametersReceiverCycle{
@@ -60,6 +61,7 @@ public:
     void start();
 signals: 
     void dataAreReceived();
+    void lastThreadIsFinished();
 private:
     void startNewIteration(QByteArray data);
     int m_currentPosition = 0;
@@ -72,14 +74,13 @@ class cycleStarter : public QObject{
     Q_OBJECT
 public:
     cycleStarter(receiverData* cycleData) : m_cycleData(cycleData){};
-    ~cycleStarter();
     void start();
 signals:
     void dataAreReceived(QVector<QByteArray> data);
-private:
+public slots:
     void checkData();
+private:
     bool inProgress;
-    bool connectIsCreated;
     receiverData* m_cycleData;
     executor* m_exe;
 };

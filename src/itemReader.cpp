@@ -169,20 +169,20 @@ void dataRecipient::setData(QString UrlAddress){
     QUrl url(UrlAddress);
     QNetworkRequest request(url);
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
-    QTimer* timer = new QTimer(this);
+    QTimer* timer = new QTimer();
     proxyStarter::start(networkManager);
+
     networkManager->get(request); 
     connect(timer, &QTimer::timeout, [this, UrlAddress, networkManager, timer]() {
         disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
         networkManager->deleteLater();
         timer->stop();
         timer->deleteLater();
-        disconnect(networkManager, nullptr, nullptr, nullptr);
         setData(UrlAddress);
     });
     connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, UrlAddress, timer](QNetworkReply* reply) {
         QByteArray responseData = reply->readAll();
-        disconnect(timer, nullptr, nullptr, nullptr);
+        disconnect(timer, &QTimer::timeout, nullptr, nullptr);
         networkManager->deleteLater();
         reply->deleteLater();
         timer->deleteLater();
@@ -199,7 +199,7 @@ void dataRecipient::setData(QString UrlAddress){
 
 void setParametersReceiverCycle::setStep(int step){
     if(step <= 1){
-        std::cout << "\nThe step is specified incorrectly!" << std::endl;
+        qDebug() << "The step is specified incorrectly!";
         return;
     }else{
         m_cycleData->m_threads = step;
@@ -208,64 +208,71 @@ void setParametersReceiverCycle::setStep(int step){
 
 void setParametersReceiverCycle::setListOfUrls(QVector<QString> listOfUrls){
     if(listOfUrls.isEmpty()){
-        std::cout << "\nList is empty!" << std::endl;
+        qDebug() << "List is empty!";
         return;
     }else{
         m_cycleData->m_listOfUrls = listOfUrls;
     }
 }
 
-cycleStarter::~cycleStarter(){
-    delete m_cycleData;
-    delete m_exe;
-}
-
 void cycleStarter::checkData(){
+    qDebug() << "data reception completed";
     if(m_cycleData->m_listOfReceivedData.length() == m_cycleData->m_listOfUrls.length()){
         emit dataAreReceived(m_cycleData->m_listOfReceivedData);
     }
 }
 
 void cycleStarter::start(){
-    if(!connectIsCreated){
-        connect(m_exe, &executor::dataAreReceived, this, &cycleStarter::checkData);
-        connectIsCreated = true;
-    };
     if(!inProgress){
         inProgress = true;
-        if(m_cycleData->m_listOfUrls.isEmpty() && m_cycleData->m_threads <= 1){
-            std::cout << "\nData not specified!" << std::endl;
+        if(m_cycleData->m_listOfUrls.isEmpty() || m_cycleData->m_threads < 1){
+            qDebug() << "Data not specified!";
+            qDebug() << "Length of url list: " << m_cycleData->m_listOfUrls.length();
+            qDebug() << "Count of threads: " << m_cycleData->m_threads;
         }else{
             int step = (m_cycleData->m_listOfUrls.length() - 1 + m_cycleData->m_threads) / m_cycleData->m_threads;
             QVector<QString> listOfUrls;
             for(int i = 0; i < m_cycleData->m_listOfUrls.length(); i++){
-                if(i + 1 % step == 0){
+                if((i + 1) % step == 0 || i == m_cycleData->m_listOfUrls.length() - 1){
+                    listOfUrls.append(m_cycleData->m_listOfUrls[i]);
                     m_exe = new executor(listOfUrls, m_cycleData);
+                    QThread *th = new QThread;
+                    m_exe->moveToThread(th);
+                    connect(m_exe, &executor::lastThreadIsFinished, this, &cycleStarter::checkData);
+                    connect(m_exe, &executor::dataAreReceived, th, &QThread::quit);
+                    connect(this, &cycleStarter::dataAreReceived, m_exe, &executor::deleteLater);
+                    connect(this, &cycleStarter::dataAreReceived, th, &QThread::deleteLater);
+                    connect(th, &QThread::started, m_exe, &executor::start);
                     listOfUrls.clear();
-                    m_exe->start();
-                    m_exe->deleteLater();
+                    th->start();
                 }else{
                     listOfUrls.append(m_cycleData->m_listOfUrls[i]);
                 }
             }
         }
     }else{
-        std::cout << "Program in progress";
+        qDebug() << "Program in progress";
     }
 }
 
 void executor::start(){
+    m_recipData = new dataRecipient();
     connect(m_recipData, &dataRecipient::dataAreReceived, this, &executor::startNewIteration);
     m_recipData->setData(m_listOfUrls[m_currentPosition]);
 }
 
 void executor::startNewIteration(QByteArray data){
+    QMutexLocker locker(&m_cycleData->listMutex);
     m_cycleData->m_listOfReceivedData.append(data);
     m_currentPosition++;
     if(m_currentPosition < m_listOfUrls.length()){
         m_recipData->setData(m_listOfUrls[m_currentPosition]);
     }else{
+        if(m_cycleData->m_listOfUrls.length() == m_cycleData->m_listOfReceivedData.length()){
+            emit lastThreadIsFinished();
+        }
         emit dataAreReceived();
+        this->deleteLater();
     }
 }
 

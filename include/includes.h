@@ -13,6 +13,8 @@
 #include <QWidget>
 #include <QUrl>
 #include <QObject>
+#include <QMutexLocker>
+#include <QMutex>
 #include <fstream>
 #include <QThread>
 #include <QNetworkAccessManager>
