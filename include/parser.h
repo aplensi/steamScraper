@@ -87,7 +87,7 @@ private:
 
 class parsJson{
 public:
-    QVector<QJsonObject> convertData(QVector<QByteArray> data);
+    static QVector<QJsonObject> convertData(QVector<QByteArray> data);
 };
 
 class parsText{
@@ -97,10 +97,7 @@ public:
 
 class extractItemData{
 public:
-    QVector<item> extract(QVector<QJsonObject> jsonDoc);
-private:
-    QVector<item> m_vectorOfItems; 
-    item m_item;
+    static QVector<item> extract(QVector<QJsonObject> jsonDoc);
 };
 
 class urlCreator{

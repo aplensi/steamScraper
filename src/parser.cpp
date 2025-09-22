@@ -238,21 +238,28 @@ void parser::parsPageOfMarketPlace(QString line)
 //===================================================================================================
 
 QVector<item> extractItemData::extract(QVector<QJsonObject> data){
+    item lItem;
+    QVector<item> vecOfLItems;
     for(const auto &jsonObj : data){
-        m_item.m_countOfSale = jsonObj.value("sell_order_count").toString().remove(',').toInt();
-        m_item.m_salePrice = jsonObj.value("sell_order_price").toString().remove('$').remove(",").toDouble();
-        m_item.m_countOfPurchase = jsonObj.value("buy_order_count").toString().remove(',').toInt();
-        m_item.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').remove(",").toDouble();
-        m_vectorOfItems.append(m_item);
+        lItem.m_countOfSale = jsonObj.value("sell_order_count").toString().remove(',').toInt();
+        lItem.m_salePrice = jsonObj.value("sell_order_price").toString().remove('$').remove(",").toDouble();
+        lItem.m_countOfPurchase = jsonObj.value("buy_order_count").toString().remove(',').toInt();
+        lItem.m_purchasePrice = jsonObj.value("buy_order_price").toString().remove('$').remove(",").toDouble();
+        vecOfLItems.append(lItem);
     }
-    return m_vectorOfItems;
+    return vecOfLItems;
 }
 
 QVector<QJsonObject> parsJson::convertData(QVector<QByteArray> data){
     QVector<QJsonObject> dataList;
-    for(int i; i < data.length(); i++){
-        dataList.append(QJsonDocument::fromJson(data[i]).object());
+    int zeroCount = 0;
+    for(const auto &i : data){
+        if(i.length() < 1000){
+            ++zeroCount;
+        }
+        dataList.append(QJsonDocument::fromJson(i).object());
     }
+    qDebug() << "count of 4 byte data: " << zeroCount;
     return dataList;
 }
 
