@@ -5,6 +5,34 @@
 #include "parser.h"
 #include "itemReader.h"
 
+class createUrlVector{
+public:
+    QVector<QString> get();
+    void clearVector();
+    int length();
+protected:
+    QVector<QString> vectorOfUrls;
+};
+
+class createUrlsOfItemPage : public createUrlVector{
+public:
+    void add(int data);
+};
+
+class loadCurrentDataOfItems : public QObject{
+    Q_OBJECT
+public:
+    void start(QVector<itemsOfPage> data);
+signals:
+    void dataAreReceived(QVector<QByteArray> data);
+private slots:
+    void finishCycle();
+private:
+    createUrlsOfItemPage m_urlCreator;
+    receiverData* m_rData = new receiverData();
+    cycleStarter *m_cycleS;
+};
+
 class controller : public QObject{
     Q_OBJECT
 public:
@@ -74,32 +102,8 @@ private:
     itemsOfPage m_items;
     PGconn* conn = nullptr;
     PGconn* connToUserBd = nullptr;
-};
 
-class createUrlVector{
-public:
-    virtual void add(QString data) = 0;
-    virtual void add(QVector<QString> data) = 0;
-    virtual void add(int data) = 0;
-    virtual void add(QVector<int> data) = 0;
-    QVector<QString> get();
-    void clearVector();
-    int length();
-private:
-    QVector<QString> vectorOfUrls;
-};
-
-class createUrlsOfItemPage : createUrlVector{
-public:
-    void add(QVector<QString> data) override;
-    void add(QString data) override;
-private:
-    QVector<QString> vectorOfUrls;
-};
-
-class loadCurrentDataOfItems{
-public:
-    void start(QVector<itemsOfPage>);
+    loadCurrentDataOfItems* m_loadCurrentItems = new loadCurrentDataOfItems;
 };
 
 #endif

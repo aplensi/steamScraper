@@ -679,6 +679,7 @@ void controller::startCycleOfProgram()
     disconnect(this, nullptr, nullptr, nullptr);
     disconnect(m_parser, nullptr, nullptr, nullptr);
     disconnect(m_reader, nullptr, nullptr, nullptr);
+    disconnect(m_loadCurrentItems, nullptr, nullptr,nullptr);
     setConnectionsOfMethods();
     m_timer.start();
     m_listOfNewItems.clear();
@@ -721,13 +722,16 @@ void controller::setConnectionsOfMethods(){
         m_reader->getCountOfItemsJson();
     });
 
-    // получаем данные скина
-    connect(this, &controller::continueReadItems, [this](){
-        connect(this, &controller::listOfItemsFromDB, m_reader, &itemReader::cycleOfLoadingDataOfItem); // устанавливаем список названий предметов в контроллер
-        connect(m_reader, &itemReader::sendJsonOfData, m_parser, &parser::parsDataOfItem); // отправляем json с данными в парсер
-        connect(m_parser, &parser::dataOfItemIsReceived, m_reader, &itemReader::cycleOfLoadingDataOfItem); // получаем данные из БД
-        connect(m_parser, &parser::gettingDataIsOvered, this, &controller::pushDataOfItemsToPgSQL); // отправляем данные в БД
+    connect(this, &controller::continueReadItems, [this](){ // temporary solution
         getListOfItemsFromDB();
+        m_loadCurrentItems->start(m_listOfItemsFromDB);
+        connect(m_loadCurrentItems, &loadCurrentDataOfItems::dataAreReceived, [this](QVector<QByteArray> data){
+            QVector<item> testItem = extractItemData::extract(parsJson::convertData(data));
+            for(int i = 0; i < m_listOfItemsFromDB.length(); ++i){
+                testItem[i].m_id = m_listOfItemsFromDB[i].m_id;
+            }
+            pushDataOfItemsToPgSQL(testItem);
+        });
     });
 }
 
@@ -743,12 +747,26 @@ int createUrlVector::length(){
     return vectorOfUrls.length();
 }
 
-void createUrlsOfItemPage::add(QVector<QString> data){
-    for(const auto &i : data){
-        vectorOfUrls.append(urlCreator::fromNameOfItemToPageOfItemsUrl(i));
-    }
+void createUrlsOfItemPage::add(int data){
+    vectorOfUrls.append(urlCreator::fromIdToMarketPriceUrl(data));
 }
 
-void createUrlsOfItemPage::add(QString data){
-    vectorOfUrls.append(urlCreator::fromNameOfItemToPageOfItemsUrl(data));
+void loadCurrentDataOfItems::finishCycle(){
+    m_cycleS->deleteLater();
+    emit dataAreReceived(m_rData->m_listOfReceivedData);
+}
+
+void loadCurrentDataOfItems::start(QVector<itemsOfPage> data){
+    m_rData->m_listOfReceivedData.clear();
+    m_urlCreator.clearVector();
+    setParametersReceiverCycle setParam(m_rData);
+    for(const auto &i : data){
+        m_urlCreator.add(i.m_id);
+    }
+    m_cycleS = new cycleStarter(m_rData);
+    setParam.setStep(200);
+    setParam.setListOfUrls(m_urlCreator.get());
+    qDebug() << "count of urls in list: " << m_rData->m_listOfUrls.length();
+    m_cycleS->start();
+    connect(m_cycleS, &cycleStarter::dataAreReceived, this, &loadCurrentDataOfItems::finishCycle);
 }
