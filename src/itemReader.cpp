@@ -188,7 +188,7 @@ void dataRecipient::setData(QString UrlAddress){
         timer->deleteLater();
         reply = nullptr;
 
-        if(responseData == "") { 
+        if(responseData.length() < 1000) { 
             setData(UrlAddress);
         }else{
             emit dataAreReceived(responseData);
@@ -211,13 +211,15 @@ void setParametersReceiverCycle::setListOfUrls(QVector<QString> listOfUrls){
         qDebug() << "List is empty!";
         return;
     }else{
+        m_cycleData->m_listOfUrls.clear();
         m_cycleData->m_listOfUrls = listOfUrls;
     }
 }
 
 void cycleStarter::checkData(){
-    qDebug() << "data reception completed";
-    if(m_cycleData->m_listOfReceivedData.length() == m_cycleData->m_listOfUrls.length()){
+    ++m_countOfCompleted;
+    if(m_countOfCompleted == m_cycleData->m_threads){
+        m_countOfCompleted = 0;
         emit dataAreReceived(m_cycleData->m_listOfReceivedData);
     }
 }
@@ -230,25 +232,25 @@ void cycleStarter::start(){
             qDebug() << "Length of url list: " << m_cycleData->m_listOfUrls.length();
             qDebug() << "Count of threads: " << m_cycleData->m_threads;
         }else{
-            int step = (m_cycleData->m_listOfUrls.length() - 1 + m_cycleData->m_threads) / m_cycleData->m_threads;
+            m_cycleData->m_listOfReceivedData.resize(m_cycleData->m_listOfUrls.length());
+            QVector<int> countUrslInThreads = separationOfThreads::divide(m_cycleData->m_listOfUrls.length(), m_cycleData->m_threads);
             QVector<QString> listOfUrls;
-            for(int i = 0; i < m_cycleData->m_listOfUrls.length(); i++){
-                if((i + 1) % step == 0 || i == m_cycleData->m_listOfUrls.length() - 1){
-                    listOfUrls.append(m_cycleData->m_listOfUrls[i]);
-                    m_exe = new executor(listOfUrls, m_cycleData);
-                    QThread *th = new QThread;
-                    m_exe->moveToThread(th);
-                    connect(m_exe, &executor::lastThreadIsFinished, this, &cycleStarter::checkData);
-                    connect(m_exe, &executor::dataAreReceived, th, &QThread::quit);
-                    connect(this, &cycleStarter::dataAreReceived, m_exe, &executor::deleteLater);
-                    connect(this, &cycleStarter::dataAreReceived, th, &QThread::deleteLater);
-                    connect(th, &QThread::started, m_exe, &executor::start);
-                    listOfUrls.clear();
-                    th->start();
-                }else{
-                    listOfUrls.append(m_cycleData->m_listOfUrls[i]);
-                }
+            int posOfIter = 0;
+            while(!countUrslInThreads.isEmpty()){
+                listOfUrls = m_cycleData->m_listOfUrls.mid(posOfIter, countUrslInThreads[0]);
+                m_exe = new executor(listOfUrls, m_cycleData, posOfIter);
+                posOfIter += countUrslInThreads[0];
+                countUrslInThreads.removeFirst();
+                QThread *th = new QThread;
+                m_exe->moveToThread(th);
+                connect(m_exe, &executor::dataAreReceived, this, &cycleStarter::checkData);
+                connect(this, &cycleStarter::dataAreReceived, th, &QThread::quit);
+                connect(this, &cycleStarter::dataAreReceived, m_exe, &executor::deleteLater);
+                connect(this, &cycleStarter::dataAreReceived, th, &QThread::deleteLater);
+                connect(th, &QThread::started, m_exe, &executor::start);
+                th->start();
             }
+
         }
     }else{
         qDebug() << "Program in progress";
@@ -263,17 +265,30 @@ void executor::start(){
 
 void executor::startNewIteration(QByteArray data){
     QMutexLocker locker(&m_cycleData->listMutex);
-    m_cycleData->m_listOfReceivedData.append(data);
+    m_cycleData->m_listOfReceivedData[m_positionInGeneralVector + m_currentPosition] = data;
     m_currentPosition++;
     if(m_currentPosition < m_listOfUrls.length()){
         m_recipData->setData(m_listOfUrls[m_currentPosition]);
     }else{
-        if(m_cycleData->m_listOfUrls.length() == m_cycleData->m_listOfReceivedData.length()){
-            emit lastThreadIsFinished();
-        }
         emit dataAreReceived();
         this->deleteLater();
     }
+}
+
+QVector<int> separationOfThreads::divide(int countOfItems, int countOfThreads){
+    QVector<int> parts;
+    int q = countOfItems / countOfThreads;
+    int r = countOfItems % countOfThreads;
+
+    for (int i = 0; i < r; i++) {
+        parts.push_back(q + 1);
+    }
+
+    for (int i = r; i < countOfThreads; i++) {
+        parts.push_back(q);
+    }
+
+    return parts;    
 }
 
 void proxyStarter::start(QNetworkAccessManager *manager){

@@ -57,7 +57,8 @@ private:
 class executor : public QObject{
     Q_OBJECT
 public:
-    executor(QVector<QString> listOfUrls, receiverData* cycleData) : m_listOfUrls(listOfUrls), m_cycleData(cycleData){};
+    executor(QVector<QString> listOfUrls, receiverData* cycleData, int position) 
+            : m_listOfUrls(listOfUrls), m_cycleData(cycleData), m_positionInGeneralVector(position){};
     void start();
 signals: 
     void dataAreReceived();
@@ -65,6 +66,7 @@ signals:
 private:
     void startNewIteration(QByteArray data);
     int m_currentPosition = 0;
+    int m_positionInGeneralVector;
     receiverData* m_cycleData;
     QVector<QString> m_listOfUrls;
     dataRecipient* m_recipData;
@@ -81,8 +83,14 @@ public slots:
     void checkData();
 private:
     bool inProgress;
+    int m_countOfCompleted = 0;
     receiverData* m_cycleData;
     executor* m_exe;
+};
+
+class separationOfThreads{
+public:
+    static QVector<int> divide(int countOfItems, int countOfThreads);
 };
 
 class proxyStarter{
