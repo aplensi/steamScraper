@@ -100,47 +100,6 @@ void itemReader::readPageOfItem(QString nameOfItem)
     });
 }
 
-void itemReader::cycleOfLoadingDataOfItem(QVector<itemsOfPage> listOfItems)
-{
-    for(int i = 0; i < 200 && i < listOfItems.length(); i++){
-        loadDataOfItem(listOfItems[i].m_id);
-    }
-}
-
-void itemReader::loadDataOfItem(int id)
-{
-    QUrl url("https://steamcommunity.com/market/itemordershistogram?country=EU&language=english&currency=1&item_nameid=" + QString::number(id) + "&norender=1");
-    QNetworkRequest request(url);
-    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
-    QTimer* timer = new QTimer(this);
-    startProxy(networkManager);
-    networkManager->get(request);
-    connect(timer, &QTimer::timeout, [this, id, networkManager, timer]() {
-        disconnect(networkManager, &QNetworkAccessManager::finished, nullptr, nullptr);
-        networkManager->deleteLater();
-        timer->stop();
-        timer->deleteLater();
-        disconnect(networkManager, nullptr, nullptr, nullptr);
-        loadDataOfItem(id);
-    });
-    connect(networkManager, &QNetworkAccessManager::finished, [this, networkManager, id, timer](QNetworkReply* reply) {
-        QByteArray responseData = reply->readAll();
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
-        disconnect(timer, nullptr, nullptr, nullptr);
-        networkManager->deleteLater();
-        reply->deleteLater();
-        timer->deleteLater();
-        reply = nullptr;
-
-        if(responseData == "" || jsonDoc.isNull()) { 
-            loadDataOfItem(id);
-        }else{
-            emit sendJsonOfData(jsonDoc, id);
-        }
-    });
-    timer->start(2000);
-}
-
 void itemReader::getSteamInventory(int chatId, QString steamId){
     QUrl url("https://steamcommunity.com/inventory/" + steamId + "/252490/2?l=english&norender=1");
     QNetworkRequest request(url);
@@ -194,7 +153,7 @@ void dataRecipient::setData(QString UrlAddress){
             emit dataAreReceived(responseData);
         }
     });
-    timer->start(2000);
+    timer->start(7000);
 }
 
 void setParametersReceiverCycle::setStep(int step){

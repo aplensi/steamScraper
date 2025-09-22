@@ -38,9 +38,8 @@ public slots:
     QVector<itemsOfPage> getListOfItems();
     void setCountOfDBItems(int count);
     void setListOfItemsDB(QVector<itemsOfPage> listOfItems);
-
-    void parsDataOfItem(QJsonDocument jsonDoc, int id);         // tgBot
-    void parsBotUpdate(QJsonDocument jsonDoc);
+        
+    void parsBotUpdate(QJsonDocument jsonDoc);                  // tgBot
     void parsInventory(int chatId, QString steamId, QJsonDocument jsonDoc);
 
 signals:
@@ -66,7 +65,6 @@ signals:
     void heapIsFinished(QVector<itemsOfPage> listOfItems);
     void namesAndIdsIsReceived(QVector<itemsOfPage> listOfItems);
     void dataOfItemIsReceived(QVector<itemsOfPage> listOfItems);
-    void gettingDataIsOvered(QVector<item> listOfDataOfItem);
 private:
     void parsPageOfMarketPlace(QString line);
     QString m_html;
