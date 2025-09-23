@@ -93,6 +93,27 @@ public:
     QVector<QString> convertData(QVector<QByteArray> data);
 };
 
+class extractPageData{
+public:
+    QVector<itemsOfPage> extract(QJsonObject jsonDoc);
+protected:
+    int m_countItems;
+    QJsonObject m_itemObj;
+    QJsonArray m_itemsArray;
+    itemsOfPage m_items;
+    QVector<itemsOfPage> m_itemsVec;
+};
+
+class extractCountOfItemsFromPage : public extractPageData{
+public:
+    int getCountOfItems(QJsonObject jsonDoc);
+};
+
+class extractALotOfDataPages : public extractPageData{
+public:
+    static QVector<itemsOfPage> extract(QVector<QJsonObject> jsonDoc);
+};
+
 class extractItemData{
 public:
     static QVector<item> extract(QVector<QJsonObject> jsonDoc);

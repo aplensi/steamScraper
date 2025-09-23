@@ -227,6 +227,33 @@ QVector<item> extractItemData::extract(QVector<QJsonObject> data){
     return vecOfLItems;
 }
 
+QVector<itemsOfPage> extractPageData::extract(QJsonObject data){
+    m_itemsVec.clear();
+    m_countItems = data.value("total_count").toInt();
+    m_itemsArray = data.value("results").toArray();
+    for (const QJsonValue& j : m_itemsArray) {
+        m_itemObj = j.toObject();
+        m_items.m_name = m_itemObj.value("name").toString();
+        m_items.m_id = 0;
+        m_itemsVec.append(m_items);
+    }
+    return m_itemsVec;
+}
+
+QVector<itemsOfPage> extractALotOfDataPages::extract(QVector<QJsonObject> jsonDoc){
+    extractPageData extractData;
+    QVector<itemsOfPage> vecItems;
+    for(const auto &i : jsonDoc){
+        vecItems.append(extractData.extract(i));
+    }
+    return vecItems;
+}
+
+int extractCountOfItemsFromPage::getCountOfItems(QJsonObject jsonDoc){
+    extract(jsonDoc);
+    return m_countItems;
+}
+
 QVector<QJsonObject> parsJson::convertData(QVector<QByteArray> data){
     QVector<QJsonObject> dataList;
     int zeroCount = 0;
